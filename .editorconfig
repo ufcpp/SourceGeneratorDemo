@@ -2,7 +2,8 @@ root = true
 
 [*]
 end_of_line = lf
+charset = utf-8
 
-[*.{xml,csproj,vbproj,fsproj,props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+[*.{xml,csproj,vbproj,fsproj,props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct,slnx}]
 indent_style = space
 indent_size = 2
