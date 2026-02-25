@@ -1,0 +1,8 @@
+root = true
+
+[*]
+end_of_line = lf
+
+[*.{xml,csproj,vbproj,fsproj,props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_style = space
+indent_size = 2
