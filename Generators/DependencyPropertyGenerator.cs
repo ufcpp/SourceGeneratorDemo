@@ -17,8 +17,9 @@ public class DependencyPropertyGenerator : IIncrementalGenerator
 
             namespace DependencyPropertyGenerator;
 
+            [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
             [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-            public class DependencyPropertyAttribute : Attribute
+            internal class DependencyPropertyAttribute : Attribute
             {
             }
             """));
