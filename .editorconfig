@@ -10,3 +10,6 @@ indent_size = 2
 
 [*.{cs,vb}]
 csharp_style_namespace_declarations=file_scoped:suggestion
+
+# RS2008: Enable analyzer release tracking
+dotnet_diagnostic.RS2008.severity = none
