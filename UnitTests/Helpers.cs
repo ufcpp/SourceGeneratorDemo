@@ -12,9 +12,16 @@ internal record struct GeneratedSource(
 internal static class Helpers
 {
     public static void RunGenerator(
+    IIncrementalGenerator generator,
+    [StringSyntax("C#")] string targetSource,
+    params GeneratedSource[] generatedSources)
+        => RunGenerator(generator, targetSource, generatedSources, null);
+
+    public static void RunGenerator(
         IIncrementalGenerator generator,
         [StringSyntax("C#")] string targetSource,
-        params GeneratedSource[] generatedSources)
+        GeneratedSource[] generatedSources,
+        string[]? errorIds)
     {
         var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
         var driver = CSharpGeneratorDriver.Create(generator).WithUpdatedParseOptions(parseOptions);
@@ -27,9 +34,7 @@ internal static class Helpers
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out var diagnostics);
 
-        Assert.Empty(diagnostics);
-
-        var map = generatedSources.ToDictionary(s => s.FileName, s => s.Source);
+        var map = generatedSources.ToDictionary(s => s.FileName, s => s.Source!);
         var matched = 0;
 
         foreach (var t in newCompilation.SyntaxTrees)
@@ -47,5 +52,14 @@ internal static class Helpers
         }
 
         Assert.Equal(generatedSources.Length, matched);
+
+        if (errorIds is null)
+        {
+            Assert.Empty(diagnostics);
+        }
+        else
+        {
+            Assert.Equal(errorIds, diagnostics.Select(x => x.Id));
+        }
     }
 }

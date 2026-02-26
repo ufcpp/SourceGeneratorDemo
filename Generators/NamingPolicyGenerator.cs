@@ -98,6 +98,7 @@ namespace Interceptors.Generated
 namespace System.Runtime.CompilerServices
 {
 #pragma warning disable CS9113
+    [Diagnostics.Conditional("COMPILE_TIME_ONLY")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
     file sealed class InterceptsLocationAttribute(int version, string data) : Attribute;
 }

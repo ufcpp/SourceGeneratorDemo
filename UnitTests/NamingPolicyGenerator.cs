@@ -21,7 +21,7 @@ public class NamingPolicyGeneratorTests
             var z = A.X.KebabCaseUpper();
 
             var a = new string().CamelCase();
-            var b = $"{1}".CamelCase();
+            var b = $"a{1}b".CamelCase();
 
             static class A
             {
