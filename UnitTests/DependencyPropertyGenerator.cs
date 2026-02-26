@@ -1,7 +1,4 @@
 using Generators;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace UnitTests;

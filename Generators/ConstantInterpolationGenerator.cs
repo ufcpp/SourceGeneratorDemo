@@ -1,8 +1,6 @@
-using Generators.NamingPolicyConverter;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Frozen;
 using System.Globalization;
 using System.Text;
 
