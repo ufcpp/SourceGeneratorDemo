@@ -9,9 +9,11 @@ namespace UnitTests;
 public class DependencyPropertyGeneratorTests
 {
     [Fact]
-    public void X()
+    public void Generate()
     {
-        RunGenerator("""
+        Helpers.RunGenerator(
+            new DependencyPropertyGenerator(),
+            """
             using DependencyPropertyGenerator;
             using DP = DependencyPropertyGenerator.DependencyProperty;
 
@@ -108,46 +110,5 @@ public class DependencyPropertyGeneratorTests
                 }
                 """),
             ]);
-    }
-
-    private record struct GeneratedSource(
-        string FileName,
-        [StringSyntax("C#")] string Source);
-
-    private static void RunGenerator(
-        [StringSyntax("C#")] string targetSource,
-        params GeneratedSource[] generatedSources)
-    {
-        var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
-        var driver = CSharpGeneratorDriver.Create(new DependencyPropertyGenerator()).WithUpdatedParseOptions(parseOptions);
-
-        var compilation = CSharpCompilation.Create("GeneratorTest",
-            references: [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
-            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(targetSource, parseOptions));
-
-        driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out var diagnostics);
-
-        Assert.Empty(diagnostics);
-
-        var map = generatedSources.ToDictionary(s => s.FileName, s => s.Source);
-        var matched = 0;
-
-        foreach (var t in newCompilation.SyntaxTrees)
-        {
-            var name = Path.GetFileName(t.FilePath);
-            if (!name.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)) continue;
-            name = name[..^".g.cs".Length];
-
-            if (map.TryGetValue(name, out var expected))
-            {
-                var s = t.GetText().ToString();
-                Assert.Equal(expected, s);
-                matched++;
-            }
-        }
-
-        Assert.Equal(generatedSources.Length, matched);
     }
 }

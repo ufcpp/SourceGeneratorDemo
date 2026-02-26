@@ -29,7 +29,7 @@ public class DependencyPropertyGenerator : IIncrementalGenerator
             (node, _) => IsPartialProperty(node),
             (context, _) => GetSemanticTargetForGeneration(context));
 
-        context.RegisterSourceOutput(propertyDeclarations, static (spc, source) => Execute(source, spc));
+        context.RegisterSourceOutput(propertyDeclarations, Execute);
     }
 
     private static bool IsPartialProperty(SyntaxNode node)
@@ -58,11 +58,8 @@ public class DependencyPropertyGenerator : IIncrementalGenerator
         return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining));
     }
 
-    private static void Execute(PropertyInfo? propertyInfo, SourceProductionContext context)
+    private static void Execute(SourceProductionContext context, PropertyInfo propertyInfo)
     {
-        if (propertyInfo is null)
-            return;
-
         var source = GenerateSource(propertyInfo);
         context.AddSource($"{propertyInfo.ClassName}.{propertyInfo.PropertyName}.g.cs", source);
     }
