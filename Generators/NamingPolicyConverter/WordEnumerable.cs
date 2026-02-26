@@ -36,6 +36,7 @@ ref struct WordEnumerator(ReadOnlySpan<char> s)
 
             if (prev == UnicodeCategory.LowercaseLetter && cat == UnicodeCategory.UppercaseLetter) break;
             if (IsNumber(prev) && IsLetter(cat)) break;
+            if (IsCaseLetter(prev) && IsNonCaseLetter(cat)) break;
             if (IsNonCaseLetter(prev) && IsCaseLetter(cat)) break;
             if (IsSeparator(cat)) { separator = true; break; }
             if (++i >= s.Length) break;
