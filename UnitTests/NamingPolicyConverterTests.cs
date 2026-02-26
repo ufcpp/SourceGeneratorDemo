@@ -29,9 +29,25 @@ public class NamingPolicyConverterTests
         Assert.Equal(kebab, source.Convert(NamingPolicy.KebabCaseLower));
         Assert.Equal(kebabUpper, source.Convert(NamingPolicy.KebabCaseUpper));
     }
-}
 
-/*
-"aáâÀàaÆÿ"
-"がa"
-*/
+    [Theory]
+    [InlineData("hello world", "hello world", TestDisplayName = "hello world")]
+    [InlineData("abcDef", "abc Def", TestDisplayName = "camelCase")]
+    [InlineData("AbcDef", "Abc Def", TestDisplayName = "PascalCase")]
+    [InlineData("abc_def", "abc def", TestDisplayName = "snake_case")]
+    [InlineData("ABC_DEF", "ABC DEF", TestDisplayName = "SCREAMING_CASE")]
+    [InlineData("abc-def", "abc def", TestDisplayName = "kebab-case")]
+    [InlineData("ABC-DEF", "ABC DEF", TestDisplayName = "UPPER-KEBAB-CASE")]
+    [InlineData("abcあ亜กdef", "abc あ亜ก def", TestDisplayName = "other letters")]
+    [InlineData("abc-あ亜ก-def", "abc あ亜ก def", TestDisplayName = "other-letters")]
+    [InlineData("BβбДdδΛlл", "Bβб Дdδ Λlл", TestDisplayName = "non-ASCII case letters")]
+    [InlineData("abc1ab12a123", "abc1 ab12 a123", TestDisplayName = "split after number")]
+    [InlineData("aáâÀàaÆÿがa", "aáâ Ààa Æÿ が a", TestDisplayName = "combining marks")]
+    public void SplitWord(string source, string spaceSplit)
+    {
+        var expected = spaceSplit.Split(' ');
+        var actual = new List<string>();
+        foreach (var w in source.SplitWord()) actual.Add(w.ToString());
+        Assert.Equal(expected, actual);
+    }
+}

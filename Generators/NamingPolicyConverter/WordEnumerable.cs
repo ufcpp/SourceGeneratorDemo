@@ -2,14 +2,14 @@ using System.Globalization;
 
 namespace Generators.NamingPolicyConverter;
 
-readonly ref struct WordEnumerable(ReadOnlySpan<char> s)
+public readonly ref struct WordEnumerable(ReadOnlySpan<char> s)
 {
     private readonly ReadOnlySpan<char> _s = s;
 
     public WordEnumerator GetEnumerator() => new(_s);
 }
 
-ref struct WordEnumerator(ReadOnlySpan<char> s)
+public ref struct WordEnumerator(ReadOnlySpan<char> s)
 {
     private readonly ReadOnlySpan<char> _s = s;
     private UnicodeCategory _prevCat = UnicodeCategory.OtherNotAssigned;

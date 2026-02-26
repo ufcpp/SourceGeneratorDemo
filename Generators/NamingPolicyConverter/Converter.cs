@@ -2,6 +2,11 @@ namespace Generators.NamingPolicyConverter;
 
 public static class Converter
 {
+    extension(ReadOnlySpan<char> s)
+    {
+        public WordEnumerable SplitWord() => new(s);
+    }
+
     extension(string s)
     {
         public string Convert(NamingPolicy policy) => Convert(s.AsSpan(), policy);
