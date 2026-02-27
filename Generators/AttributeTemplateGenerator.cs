@@ -21,7 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace AttributeTemplateGenerator;
 
 [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
 internal class TemplateAttribute([StringSyntax("C#")] params string[] templates) : Attribute
 {
     protected static string Parent(string template) => Up(0, template);
@@ -50,15 +50,10 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             .Where(t => t != null);
 
         var provider = memberProvider.Combine(templateProvider.Collect())
-            .Select((t, _) =>
-            {
-                //todo: Multiple attributes on the same type
-                if (t.Right.FirstOrDefault(x => x!.Attribute.Equals(t.Left!.Attribute)) is { } f)
-                {
-                    return new GenerationInfo(f.Attribute, new(f.Templates, t.Left!.Member), new(f.Params, t.Left.Args));
-                }
-                return null;
-            })
+            .SelectMany((t, _) => t.Right
+                .Where(x => x!.Attribute == t.Left!.Attribute)
+                .Select(f => new GenerationInfo(f!.Attribute, new(f.Templates, t.Left!.Member), new(f.Params, t.Left.Args)))
+            )
             .Where(x => x != null);
 
         context.RegisterSourceOutput(provider, Execute!);
