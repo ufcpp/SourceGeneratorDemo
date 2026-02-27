@@ -463,6 +463,8 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 }
                 else if (t.Node is TypeDeclarationSyntax type)
                 {
+                    appendModifiers(type.Modifiers);
+
                     var keyword = type.Kind() switch
                     {
                         SyntaxKind.ClassDeclaration => "class",
@@ -473,21 +475,23 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                     };
 
                     s.Append($$"""
-                        partial {{keyword}} {{type.Identifier.ValueText}} {
+                        {{keyword}} {{type.Identifier.ValueText}} {
 
                         """);
                 }
                 else if (t.Node is PropertyDeclarationSyntax p)
                 {
+                    appendModifiers(p.Modifiers);
                     s.Append($$"""
-                        {{string.Join(" ", p.Modifiers.Select(m => m.ValueText))}} {{p.Type.GetText()}} {{p.Identifier.ValueText}} {
+                        {{p.Type}} {{p.Identifier.ValueText}} {
 
                         """);
                 }
                 else if (t.Node is MethodDeclarationSyntax m)
                 {
+                    appendModifiers(m.Modifiers);
                     s.Append($$"""
-                        {{string.Join(" ", m.Modifiers.Select(m => m.ValueText))}} {{m.ReturnType.GetText()}} {{m.Identifier.ValueText}}(
+                        {{m.ReturnType}} {{m.Identifier.ValueText}}(
                         """);
 
                     var first = true;
@@ -568,6 +572,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             }
 
             s.Append('}', Templates.Count - 1);
+            newLine();
 
             void newLine()
             {
@@ -583,6 +588,15 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 ({ } x, { } y) => $"{{0,{x}:{y}}}",
                 _ => "{0}",
             };
+
+            void appendModifiers(SyntaxTokenList modifiers)
+            {
+                foreach (var token in modifiers)
+                {
+                    s.Append(token.ValueText);
+                    s.Append(' ');
+                }
+            }
         }
     }
 }
