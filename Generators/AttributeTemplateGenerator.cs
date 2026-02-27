@@ -89,7 +89,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             if (t is not PrimaryConstructorBaseTypeSyntax pc) continue;
 
             var ti = semantics.GetTypeInfo(t.Type);
-            if (ti.Type is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" } a)
+            if (ti.Type is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
             {
                 var templates = new Template[pc.ArgumentList.Arguments.Count];
                 var i = 0;
@@ -147,8 +147,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     {
         var s = new StringBuilder();
         info.Generate(s);
-
-        //context.AddSource
+        context.AddSource("AttributeTemplate_" + info.Templates.GetId() + "g.cs", s.ToString());
     }
 
     private readonly record struct InterpolationContent(string? Text = null, object? ConstantValue = null, string? Identifier = null, int? Alignment = null, string? Format = null)
@@ -391,6 +390,57 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             TypeDeclarationSyntax t => t.Identifier.ValueText,
             _ => "", //todo: error? never reachable?
         };
+
+        public Parameters MethodParameters => Member is MethodDeclarationSyntax m ? new(m.ParameterList) : default;
+
+        public readonly struct Parameters(ParameterListSyntax list)
+        {
+            public Parameter this[int i] => new(list.Parameters[i]);
+
+            public IEnumerator<Parameter> GetEnumerator()
+            {
+                foreach (var p in list.Parameters)
+                {
+                    yield return new Parameter(p);
+                }
+            }
+        }
+
+        public readonly struct Parameter(ParameterSyntax p)
+        {
+            public string Type => p.Type!.ToString();
+            public string Name => p.Identifier.ValueText;
+        }
+
+        public string GetId()
+        {
+            var sb = new StringBuilder();
+            foreach (var (node, _) in _templates)
+            {
+                if (node is CompilationUnitSyntax) continue;
+                else if (node is NamespaceDeclarationSyntax n)
+                {
+                    sb.Append(n.Name).Append('.');
+                }
+                else if (node is TypeDeclarationSyntax t)
+                {
+                    sb.Append(t.Identifier.ValueText).Append('.');
+                }
+                else if (node is PropertyDeclarationSyntax p)
+                {
+                    sb.Append(p.Identifier.ValueText).Append('.');
+                }
+                else if (node is MethodDeclarationSyntax m)
+                {
+                    sb.Append(m.Identifier.ValueText).Append('.');
+                }
+
+                //todo: method arity
+                //todo: generic type arity
+                //todo: parameter types for method overloads
+            }
+            return sb.ToString();
+        }
     }
 
     private record TemplateInfo(string Attribute, ParameterList Params, IEnumerable<Template> Templates);
@@ -418,7 +468,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                         SyntaxKind.ClassDeclaration => "class",
                         SyntaxKind.StructDeclaration => "struct",
                         SyntaxKind.RecordDeclaration => "record",
-                        SyntaxKind.RecordStructDeclaration => "record class",
+                        SyntaxKind.RecordStructDeclaration => "record struct",
                         _ => null, //todo: error
                     };
 
@@ -430,16 +480,28 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 else if (t.Node is PropertyDeclarationSyntax p)
                 {
                     s.Append($$"""
-                        partial {{p.Type.GetText()}} {{p.Identifier.ValueText}} {
+                        {{string.Join(" ", p.Modifiers.Select(m => m.ValueText))}} {{p.Type.GetText()}} {{p.Identifier.ValueText}} {
 
                         """);
                 }
                 else if (t.Node is MethodDeclarationSyntax m)
                 {
                     s.Append($$"""
-                        partial {{m.ReturnType.GetText()}} {{m.Identifier.ValueText}} {
+                        {{string.Join(" ", m.Modifiers.Select(m => m.ValueText))}} {{m.ReturnType.GetText()}} {{m.Identifier.ValueText}}(
+                        """);
 
-                        """); // todo args
+                    var first = true;
+                    foreach (var mp in new TemplateHierarchy.Parameters(m.ParameterList))
+                    {
+                        if (first) first = false;
+                        else s.Append(", ");
+                        s.Append($"{mp.Type} {mp.Name}");
+                    }
+
+                    s.Append("""
+                        ) {
+
+                        """);
                 }
                 else { } // todo: error? never reachable?
 
@@ -471,13 +533,25 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                             {
                                 if (id1 == "Type")
                                 {
-                                    //todo: alignment. use it referring parameter.
-                                    s.Append(Templates.Type);
+                                    if (node.Alignment is { } a)
+                                    {
+                                        s.Append(Templates.MethodParameters[a].Type);
+                                    }
+                                    else
+                                    {
+                                        s.Append(Templates.Type);
+                                    }
                                 }
                                 else if (id1 == "Name")
                                 {
-                                    //todo: alignment. use it referring parameter.
-                                    s.Append(Templates.Name);
+                                    if (node.Alignment is { } a)
+                                    {
+                                        s.Append(Templates.MethodParameters[a].Name);
+                                    }
+                                    else
+                                    {
+                                        s.Append(Templates.Name);
+                                    }
                                 }
                                 else
                                 {
@@ -495,8 +569,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
 
             s.Append('}', Templates.Count - 1);
 
-            var x = s.ToString();
-
             void newLine()
             {
                 // source-code-dependent LF.
@@ -511,6 +583,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 ({ } x, { } y) => $"{{0,{x}:{y}}}",
                 _ => "{0}",
             };
+        }
     }
-}
 }
