@@ -14,6 +14,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
             "TemplateAttribute.g.cs",
 /* lang=C# */
 """
+#nullable enable
 #pragma warning disable CS9113, IDE0060
 using System.Diagnostics.CodeAnalysis;
 
@@ -51,9 +52,10 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         var provider = memberProvider.Combine(templateProvider.Collect())
             .Select((t, _) =>
             {
+                //todo: Multiple attributes on the same type
                 if (t.Right.FirstOrDefault(x => x!.Attribute.Equals(t.Left!.Attribute)) is { } f)
                 {
-                    return new GenerationInfo(new(f.Templates, t.Left!.Member), new(f.Params, t.Left.Args));
+                    return new GenerationInfo(f.Attribute, new(f.Templates, t.Left!.Member), new(f.Params, t.Left.Args));
                 }
                 return null;
             })
@@ -147,7 +149,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     {
         var s = new StringBuilder();
         info.Generate(s);
-        context.AddSource("AttributeTemplate_" + info.Templates.GetId() + "g.cs", s.ToString());
+        context.AddSource($"ATG_{info.Attribute}_{info.Templates.GetId()}g.cs", s.ToString());
     }
 
     private readonly record struct InterpolationContent(string? Text = null, object? ConstantValue = null, string? Identifier = null, int Level = 0, int? Alignment = null, string? Format = null)
@@ -429,6 +431,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         public string GetId()
         {
             var sb = new StringBuilder();
+
             foreach (var (node, _) in _templates)
             {
                 if (node is CompilationUnitSyntax) continue;
@@ -459,7 +462,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
 
     private record TemplateInfo(string Attribute, ParameterList Params, IEnumerable<Template> Templates);
     private record MemberInfo(string Attribute, ArgumentList Args, MemberDeclarationSyntax Member);
-    private record GenerationInfo(TemplateHierarchy Templates, ParameterMap Params)
+    private record GenerationInfo(string Attribute, TemplateHierarchy Templates, ParameterMap Params)
     {
         public void Generate(StringBuilder s)
         {
