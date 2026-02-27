@@ -20,7 +20,7 @@ public static readonly DependencyProperty {Name}Property =
     DependencyProperty.Register(
         nameof({Name}),
         typeof({Type}),
-        typeof(DependencyPropertyAttributeTemplateExample), //todo: Parent(Type)
+        typeof({Parent(Name)}),
         new PropertyMetadata(default({Type})));
 
 """),

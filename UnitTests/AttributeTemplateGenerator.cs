@@ -85,7 +85,7 @@ return {n} * {Name, 0} * {Name, 1};
 """,
 Down(1, "// comment"),
 Up(2, $"""
-// comment {Type} {Name}({Type,0} {Name,0}, {Type,1} {Name,1})
+// comment {Type} {Parent(Name)}.{Name}({Type,0} {Name,0}, {Type,1} {Name,1})
 """));
 
 """"");

@@ -150,7 +150,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         context.AddSource("AttributeTemplate_" + info.Templates.GetId() + "g.cs", s.ToString());
     }
 
-    private readonly record struct InterpolationContent(string? Text = null, object? ConstantValue = null, string? Identifier = null, int? Alignment = null, string? Format = null)
+    private readonly record struct InterpolationContent(string? Text = null, object? ConstantValue = null, string? Identifier = null, int Level = 0, int? Alignment = null, string? Format = null)
     {
         public static InterpolationContent Create(SemanticModel semantics, InterpolatedStringContentSyntax c)
         {
@@ -162,14 +162,18 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             {
                 int? align = i.AlignmentClause is { } a && semantics.GetConstantValue(a.Value) is { HasValue: true, Value: int x } ? x : null;
                 var fmt = i.FormatClause?.FormatStringToken.ValueText;
-                if (i.Expression is IdentifierNameSyntax id)
+
+                var e = i.Expression;
+                (var level, e) = GetLevelAndExpression(semantics, e);
+
+                if (e is IdentifierNameSyntax id)
                 {
-                    return new(Identifier: id.Identifier.ValueText, Alignment: align, Format: fmt);
+                    return new(Identifier: id.Identifier.ValueText, Level: level, Alignment: align, Format: fmt);
                 }
                 else
                 {
-                    var v = semantics.GetConstantValue(i.Expression);
-                    if (v.HasValue) return new(ConstantValue: v.Value, Alignment: align, Format: fmt);
+                    var v = semantics.GetConstantValue(e);
+                    if (v.HasValue) return new(ConstantValue: v.Value, Level: level, Alignment: align, Format: fmt);
                 }
             }
             return default;
@@ -269,45 +273,48 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         public object? this[string parameterName] => _map is { } t && t.TryGetValue(parameterName, out var v) ? v : null;
     }
 
+    private static (int level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
+    {
+        int? IntValue(ExpressionSyntax ex)
+        {
+            var v = semantics.GetConstantValue(ex);
+            if (v.HasValue && v.Value is int i) return i;
+            return null;
+        }
+        int level = 0;
+        if (e is InvocationExpressionSyntax { Expression: IdentifierNameSyntax n, ArgumentList.Arguments: var args })
+        {
+            var name = n.Identifier.ValueText;
+            if (name == "Parent" && args.Count == 1)
+            {
+                level = 1;
+                e = args[0].Expression;
+            }
+            else if (name == "Global" && args.Count == 1)
+            {
+                level = -1;
+                e = args[0].Expression;
+            }
+            if (name == "Up" && args.Count == 2 && IntValue(args[0].Expression) is int x)
+            {
+                level = x + 1;
+                e = args[1].Expression;
+            }
+            else if (name == "Down" && args.Count == 2 && IntValue(args[0].Expression) is int y)
+            {
+                level = -y;
+                e = args[1].Expression;
+            }
+            // else error?
+        }
+        return (level, e);
+    }
+
     private record Template(int Level, Interpolation? Interpolation = null, string? Constant = null, string? Identifier = null)
     {
         public static Template Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
         {
-            int? IntValue(ExpressionSyntax ex)
-            {
-                var v = semantics.GetConstantValue(ex);
-                if (v.HasValue && v.Value is int i) return i;
-                return null;
-            }
-
-            int level = 0;
-
-            if (e is InvocationExpressionSyntax { Expression: IdentifierNameSyntax n, ArgumentList.Arguments: var args })
-            {
-                var name = n.Identifier.ValueText;
-
-                if (name == "Parent" && args.Count == 1)
-                {
-                    level = 1;
-                    e = args[0].Expression;
-                }
-                else if (name == "Global" && args.Count == 1)
-                {
-                    level = -1;
-                    e = args[0].Expression;
-                }
-                if (name == "Up" && args.Count == 2 && IntValue(args[0].Expression) is int x)
-                {
-                    level = x + 1;
-                    e = args[1].Expression;
-                }
-                else if (name == "Down" && args.Count == 2 && IntValue(args[0].Expression) is int y)
-                {
-                    level = -y;
-                    e = args[1].Expression;
-                }
-                //todo: error
-            }
+            (var level, e) = GetLevelAndExpression(semantics, e);
 
             if (e is InterpolatedStringExpressionSyntax i)
             {
@@ -371,27 +378,34 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         public int Count => _templates.Length;
         public IEnumerator<(SyntaxNode Node, Template? Template)> GetEnumerator() => _templates.AsEnumerable().GetEnumerator();
 
-        public MemberDeclarationSyntax Member => (MemberDeclarationSyntax)_templates[^1].Node;
-
-        //todo: generic type, full name
-        public string Type => Member switch
+        public MemberInfo GetNode(int level)
         {
-            PropertyDeclarationSyntax p => p.Type.ToString(),
-            MethodDeclarationSyntax m => m.ReturnType.ToString(),
-            TypeDeclarationSyntax t => t.Identifier.ValueText,
-            _ => "", //todo: error? never reachable?
-        };
+            var i = level >= 0 ? _templates.Length - level - 1 : -level;
+            return new(_templates[i].Node as MemberDeclarationSyntax);
+        }
 
-        //todo: generic method, generic type
-        public string Name => Member switch
+        public readonly struct MemberInfo(MemberDeclarationSyntax? m)
         {
-            PropertyDeclarationSyntax p => p.Identifier.ValueText,
-            MethodDeclarationSyntax m => m.Identifier.ValueText,
-            TypeDeclarationSyntax t => t.Identifier.ValueText,
-            _ => "", //todo: error? never reachable?
-        };
+            //todo: generic type, full name
+            public string Type => m switch
+            {
+                PropertyDeclarationSyntax p => p.Type.ToString(),
+                MethodDeclarationSyntax m => m.ReturnType.ToString(),
+                TypeDeclarationSyntax t => t.Identifier.ValueText,
+                _ => "", //todo: error? never reachable?
+            };
 
-        public Parameters MethodParameters => Member is MethodDeclarationSyntax m ? new(m.ParameterList) : default;
+            //todo: generic method, generic type
+            public string Name => m switch
+            {
+                PropertyDeclarationSyntax p => p.Identifier.ValueText,
+                MethodDeclarationSyntax m => m.Identifier.ValueText,
+                TypeDeclarationSyntax t => t.Identifier.ValueText,
+                _ => "", //todo: error? never reachable?
+            };
+        }
+
+        public Parameters MethodParameters => _templates[^1].Node is MethodDeclarationSyntax m ? new(m.ParameterList) : default;
 
         public readonly struct Parameters(ParameterListSyntax list)
         {
@@ -543,7 +557,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                                     }
                                     else
                                     {
-                                        s.Append(Templates.Type);
+                                        s.Append(Templates.GetNode(node.Level).Type);
                                     }
                                 }
                                 else if (id1 == "Name")
@@ -554,7 +568,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                                     }
                                     else
                                     {
-                                        s.Append(Templates.Name);
+                                        s.Append(Templates.GetNode(node.Level).Name);
                                     }
                                 }
                                 else
