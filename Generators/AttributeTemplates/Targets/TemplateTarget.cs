@@ -37,4 +37,3 @@ internal record TemplateTarget(string Attribute, ArgumentList Args, MemberDeclar
         return null;
     }
 }
-

@@ -34,18 +34,15 @@ internal readonly struct TemplateHierarchy
             items[i].Template = t; // check if already exists at the same level? error? ignore first or last?
         }
 
-        // top to bottom
-        items.Reverse();
-
         _templates = items;
     }
 
     public int Count => _templates.Length;
-    public IEnumerator<(SyntaxNode Node, MemberTemplate? Template)> GetEnumerator() => _templates.AsEnumerable().GetEnumerator();
+    public IEnumerator<(SyntaxNode Node, MemberTemplate? Template)> GetEnumerator() => _templates.AsEnumerable().Reverse().GetEnumerator();
 
     public MemberInfo GetNode(int level)
     {
-        var i = level >= 0 ? _templates.Length - level - 1 : -level;
+        var i = level < 0 ? _templates.Length + level : level;
         return new(_templates[i].Node as MemberDeclarationSyntax);
     }
 
@@ -70,7 +67,7 @@ internal readonly struct TemplateHierarchy
         };
     }
 
-    public Parameters MethodParameters => _templates[^1].Node is MethodDeclarationSyntax m ? new(m.ParameterList) : default;
+    public Parameters MethodParameters => _templates[0].Node is MethodDeclarationSyntax m ? new(m.ParameterList) : default;
 
     public readonly struct Parameters(ParameterListSyntax list)
     {
@@ -95,7 +92,7 @@ internal readonly struct TemplateHierarchy
     {
         var sb = new StringBuilder();
 
-        foreach (var (node, _) in _templates)
+        foreach (var (node, _) in this)
         {
             if (node is CompilationUnitSyntax) continue;
             else if (node is NamespaceDeclarationSyntax n)
