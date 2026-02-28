@@ -5,6 +5,9 @@ namespace Generators.AttributeTemplates.Templates;
 
 internal static class TemplateProvider
 {
+    public static IncrementalValuesProvider<TemplateInfo> CreateTemplateSyntaxProvider(this IncrementalGeneratorInitializationContext context)
+        => context.SyntaxProvider.CreateTemplateSyntaxProvider();
+
     public static IncrementalValuesProvider<TemplateInfo> CreateTemplateSyntaxProvider(this SyntaxValueProvider syntaxProvider)
         => syntaxProvider.CreateSyntaxProvider(
             IsAttributeDeclaration,
