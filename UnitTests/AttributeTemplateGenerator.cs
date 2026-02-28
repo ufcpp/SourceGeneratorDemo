@@ -21,7 +21,7 @@ internal partial class Class1;
 [ConstStr("X", 1234.5)]
 internal partial class Class1_2;
 
-[ConstStr("X", 1234.5, CultureName = "fr")]
+[ConstStr("X", 1234.5, CultureName = "de")]
 internal partial class Class1_3;
 
 [ConstStr("X", 1234.5, CultureName = "fr")]
@@ -67,7 +67,7 @@ namespace A1
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 internal class TTemplateAttribute(string header) : TemplateAttribute(
 $"""
-public static readonly Type This = typeof({Type});
+public static readonly Type This = typeof({Name});
 """,
 Global(header));
 

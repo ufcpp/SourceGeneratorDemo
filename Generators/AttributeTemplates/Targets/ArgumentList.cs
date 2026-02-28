@@ -6,6 +6,7 @@ namespace Generators.AttributeTemplates.Targets;
 internal readonly struct ArgumentList
 {
     private readonly object?[]? _values;
+    public string? Culture { get; }
 
     public ArgumentList(SemanticModel semantics, AttributeArgumentListSyntax? list)
     {
@@ -15,10 +16,24 @@ internal readonly struct ArgumentList
             return;
         }
 
-        var values = new object?[list.Arguments.Count];
+        var count = 0;
+        foreach (var a in list.Arguments)
+        {
+            ++count;
+            if (a.NameEquals is { } n)
+            {
+                //todo: ensure n.Name == "CultureName"
+                var v = semantics.GetConstantValue(a.Expression);
+                //if (!v.HasValue || v.Value is not string) todo: error
+                Culture = (string?)v.Value;
+                break;
+            }
+        }
+
+        var values = new object?[count];
         var i = 0;
 
-        foreach (var a in list.Arguments)
+        foreach (var a in list.Arguments.Take(count))
         {
             var v = semantics.GetConstantValue(a.Expression);
             //if (!v.HasValue) todo: error

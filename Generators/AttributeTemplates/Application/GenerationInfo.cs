@@ -6,6 +6,8 @@ namespace Generators.AttributeTemplates.Application;
 
 internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, ParameterMap Params)
 {
+    private IFormatProvider FormatProvider => field ??= Params.GetCultureInfo();
+
     public string Generate()
     {
         var s = new StringBuilder();
@@ -106,7 +108,8 @@ internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, Pa
                 ({ } x, { } y) => $"{{0,{x}:{y}}}",
                 _ => "{0}",
             };
-            s.AppendFormat(null, formatString, value); // todo: take culture
+
+            s.AppendFormat(FormatProvider, formatString, value); // todo: take culture
         }
 
         if (mt.Constant is { } constValue)
