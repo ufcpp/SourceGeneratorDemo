@@ -1,4 +1,5 @@
 using Generators.AttributeTemplates;
+using Generators.AttributeTemplates.Targets;
 using Generators.AttributeTemplates.Templates;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -16,10 +17,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
 
         var templateProvider = context.CreateTemplateSyntaxProvider();
 
-        var memberProvider = context.SyntaxProvider.CreateSyntaxProvider(
-            IsTemplateMember,
-            GetMemberInfo)
-            .Where(t => t != null);
+        var memberProvider = context.CreateTargetSyntaxProvider();
 
         var provider = memberProvider.Combine(templateProvider.Collect())
             .SelectMany((t, _) => t.Right
@@ -31,79 +29,11 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(provider, Execute!);
     }
 
-    private bool IsTemplateMember(SyntaxNode node, CancellationToken token)
-    {
-        return node is MemberDeclarationSyntax d
-            && d.Modifiers.Any(SyntaxKind.PartialKeyword)
-            && d.AttributeLists.Any()
-            && (d is PropertyDeclarationSyntax or MethodDeclarationSyntax or TypeDeclarationSyntax);
-    }
-
-    private MemberInfo? GetMemberInfo(GeneratorSyntaxContext context, CancellationToken token)
-    {
-        var d = (MemberDeclarationSyntax)context.Node;
-        var semantics = context.SemanticModel;
-
-        if (GetAttribute(d, semantics) is not { } t) return null;
-
-        return new(t.Name, t.Args, d);
-    }
-
-    private static (string Name, ArgumentList Args)? GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)
-    {
-        foreach (var list in d.AttributeLists)
-        {
-            foreach (var a in list.Attributes)
-            {
-                var at = semantics.GetTypeInfo(a);
-
-                if (at.Type is not { } t) continue;
-                
-                var bat = at.Type?.BaseType;
-                if (bat is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
-                {
-                    return (t.Name, new(semantics, a.ArgumentList));
-                }
-            }
-        }
-
-        return null;
-    }
-
     private void Execute(SourceProductionContext context, GenerationInfo info)
     {
         var s = new StringBuilder();
         info.Generate(s);
         context.AddSource($"ATG_{info.Attribute}_{info.Templates.GetId()}g.cs", s.ToString());
-    }
-
-    private readonly struct ArgumentList
-    {
-        private readonly object?[]? _values;
-
-        public ArgumentList(SemanticModel semantics, AttributeArgumentListSyntax? list)
-        {
-            if (list is null)
-            {
-                _values = null;
-                return;
-            }
-
-            var values = new object?[list.Arguments.Count];
-            var i = 0;
-
-            foreach (var a in list.Arguments)
-            {
-                var v = semantics.GetConstantValue(a.Expression);
-                //if (!v.HasValue) todo: error
-                values[i++] = v;
-            }
-
-            _values = values;
-        }
-
-        public int Count => _values?.Length ?? 0;
-        public object? this[int index] => _values![index];
     }
 
     private readonly struct ParameterMap
@@ -240,7 +170,6 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
         }
     }
 
-    private record MemberInfo(string Attribute, ArgumentList Args, MemberDeclarationSyntax Member);
     private record GenerationInfo(string Attribute, TemplateHierarchy Templates, ParameterMap Params)
     {
         public void Generate(StringBuilder s)
