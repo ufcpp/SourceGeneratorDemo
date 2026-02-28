@@ -21,7 +21,7 @@ internal static class ApplicationProvider
         return memberProvider.Combine(templateProvider.Collect())
             .SelectMany((t, _) => t.Right
                 .Where(x => x!.Attribute == t.Left!.Attribute)
-                .Select(f => new GenerationInfo(f!.Attribute, new(f.Templates, t.Left!.Member), new(f.Params, t.Left.Args)))
+                .Select(f => new GenerationInfo(f!.Attribute, new(f.Templates, t.Left!.Members), new(f.Params, t.Left.Args)))
             )
             .Where(x => x != null);
     }

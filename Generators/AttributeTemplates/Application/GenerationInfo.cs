@@ -1,6 +1,5 @@
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Generators.AttributeTemplates.Targets;
+using static Generators.AttributeTemplates.Targets.Member;
 using System.Text;
 
 namespace Generators.AttributeTemplates.Application;
@@ -35,62 +34,53 @@ internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, Pa
         return s.ToString();
     }
 
-    private static void GenerateMemberDeclaration(StringBuilder s, SyntaxNode node)
+    private static void GenerateMemberDeclaration(StringBuilder s, Member node)
     {
-        void appendModifiers(SyntaxTokenList modifiers)
+        void appendModifiers(string[] modifiers)
         {
             foreach (var token in modifiers)
             {
-                s.Append(token.ValueText);
+                s.Append(token);
                 s.Append(' ');
             }
         }
 
-        if (node is CompilationUnitSyntax)
+        if (node is Root)
         {
         }
-        else if (node is NamespaceDeclarationSyntax n)
+        else if (node is Namespace n)
         {
             s.Append($$"""
                         namespace {{n.Name}} {
 
                         """);
         }
-        else if (node is TypeDeclarationSyntax type)
+        else if (node is TypeDeclaration type)
         {
             appendModifiers(type.Modifiers);
 
-            var keyword = type.Kind() switch
-            {
-                SyntaxKind.ClassDeclaration => "class",
-                SyntaxKind.StructDeclaration => "struct",
-                SyntaxKind.RecordDeclaration => "record",
-                SyntaxKind.RecordStructDeclaration => "record struct",
-                _ => null, //todo: error
-            };
-
             s.Append($$"""
-                        {{keyword}} {{type.Identifier.ValueText}} {
+                        {{type.Keyword}} {{type.Name}} {
 
                         """);
         }
-        else if (node is PropertyDeclarationSyntax p)
+        else if (node is Property p)
         {
             appendModifiers(p.Modifiers);
             s.Append($$"""
-                        {{p.Type}} {{p.Identifier.ValueText}} {
+                        {{p.Type}} {{p.Name}} {
 
                         """);
         }
-        else if (node is MethodDeclarationSyntax m)
+        else if (node is Method m)
         {
             appendModifiers(m.Modifiers);
             s.Append($$"""
-                        {{m.ReturnType}} {{m.Identifier.ValueText}}(
+                        {{m.Type}} {{m.Name}}(
                         """);
 
             var first = true;
-            foreach (var mp in new TemplateHierarchy.Parameters(m.ParameterList))
+            foreach (var mp in m.Parameters)
             {
                 if (first) first = false;
                 else s.Append(", ");
@@ -142,27 +132,9 @@ internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, Pa
                 }
                 else if (c.Identifier is { } id1)
                 {
-                    if (id1 == Intrinsic.Type)
+                    if (Templates.TryGetIntrinsicValue(id1, c.Alignment, c.Level, out var iv))
                     {
-                        if (c.Alignment is { } a)
-                        {
-                            s.Append(Templates.MethodParameters[a].Type);
-                        }
-                        else
-                        {
-                            s.Append(Templates.GetNode(c.Level).Type);
-                        }
-                    }
-                    else if (id1 == Intrinsic.Name)
-                    {
-                        if (c.Alignment is { } a)
-                        {
-                            s.Append(Templates.MethodParameters[a].Name);
-                        }
-                        else
-                        {
-                            s.Append(Templates.GetNode(c.Level).Name);
-                        }
+                        s.Append(iv);
                     }
                     else
                     {

@@ -1,10 +1,21 @@
 #pragma warning disable IDE0130
 
+using System.ComponentModel;
+
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Delegate, Inherited = false)]
-    internal sealed class IsExternalInit : Attribute
+    internal sealed class IsExternalInit : Attribute;
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal sealed class RequiredMemberAttribute : Attribute;
+
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
+    public sealed class CompilerFeatureRequiredAttribute(string featureName) : Attribute
     {
+        public string FeatureName { get; } = featureName;
+        public bool IsOptional { get; init; }
     }
 }
 

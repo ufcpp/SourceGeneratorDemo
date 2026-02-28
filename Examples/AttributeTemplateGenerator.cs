@@ -45,7 +45,7 @@ namespace A1
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 internal class TTemplateAttribute(string header) : TemplateAttribute(
 $"""
-public static readonly Type This = typeof({Type});
+public static readonly Type This = typeof({Name});
 """,
 Global(header));
 
