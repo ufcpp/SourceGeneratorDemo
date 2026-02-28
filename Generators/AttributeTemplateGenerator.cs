@@ -1,3 +1,4 @@
+using Generators.AttributeTemplates.Templates;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -39,10 +40,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         // : base clause for classes/structs
         // : this, : base clause for constructors
 
-        var templateProvider = context.SyntaxProvider.CreateSyntaxProvider(
-            IsAttributeDeclaration,
-            GetTemplateInfo)
-            .Where(t => t != null);
+        var templateProvider = context.SyntaxProvider.CreateTemplateSyntaxProvider();
 
         var memberProvider = context.SyntaxProvider.CreateSyntaxProvider(
             IsTemplateMember,
@@ -57,48 +55,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             .Where(x => x != null);
 
         context.RegisterSourceOutput(provider, Execute!);
-    }
-
-    private bool IsAttributeDeclaration(SyntaxNode node, CancellationToken token)
-    {
-        return node is ClassDeclarationSyntax c
-            && c.Identifier.ValueText.EndsWith("Attribute");
-    }
-
-    private TemplateInfo? GetTemplateInfo(GeneratorSyntaxContext context, CancellationToken token)
-    {
-        var d = (ClassDeclarationSyntax)context.Node;
-
-        if (d.BaseList is not { } b) return null;
-
-        var parameters = new ParameterList(d.ParameterList);
-
-        var templates = GetTemplates(b, context.SemanticModel, parameters);
-        if (templates is null or []) return null;
-
-        return new(d.Identifier.ValueText, parameters, templates);
-    }
-
-    private static Template[]? GetTemplates(BaseListSyntax b, SemanticModel semantics, ParameterList parameters)
-    {
-        foreach (var t in b.Types)
-        {
-            if (t is not PrimaryConstructorBaseTypeSyntax pc) continue;
-
-            var ti = semantics.GetTypeInfo(t.Type);
-            if (ti.Type is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
-            {
-                var templates = new Template[pc.ArgumentList.Arguments.Count];
-                var i = 0;
-                foreach (var arg in pc.ArgumentList.Arguments)
-                {
-                    templates[i++] = Template.Create(semantics, parameters, arg.Expression);
-                }
-                return templates;
-            }
-        }
-
-        return null;
     }
 
     private bool IsTemplateMember(SyntaxNode node, CancellationToken token)
@@ -147,50 +103,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         context.AddSource($"ATG_{info.Attribute}_{info.Templates.GetId()}g.cs", s.ToString());
     }
 
-    private readonly record struct InterpolationContent(string? Text = null, object? ConstantValue = null, string? Identifier = null, int Level = 0, int? Alignment = null, string? Format = null)
-    {
-        public static InterpolationContent Create(SemanticModel semantics, InterpolatedStringContentSyntax c)
-        {
-            if (c is InterpolatedStringTextSyntax t)
-            {
-                return new(Text: t.TextToken.ValueText);
-            }
-            else if (c is InterpolationSyntax i)
-            {
-                int? align = i.AlignmentClause is { } a && semantics.GetConstantValue(a.Value) is { HasValue: true, Value: int x } ? x : null;
-                var fmt = i.FormatClause?.FormatStringToken.ValueText;
-
-                var e = i.Expression;
-                (var level, e) = GetLevelAndExpression(semantics, e);
-
-                if (e is IdentifierNameSyntax id)
-                {
-                    return new(Identifier: id.Identifier.ValueText, Level: level, Alignment: align, Format: fmt);
-                }
-                else
-                {
-                    var v = semantics.GetConstantValue(e);
-                    if (v.HasValue) return new(ConstantValue: v.Value, Level: level, Alignment: align, Format: fmt);
-                }
-            }
-            return default;
-        }
-
-        public override string ToString()
-        {
-            if (Text is { } t) return t;
-            if (ConstantValue is { } c) return $"{{{c},{Alignment}:{Format}}}";
-            if (Identifier is { } i) return $"{{{i},{Alignment}:{Format}}}";
-            return "";
-        }
-    }
-
-    private readonly record struct Interpolation(IEnumerable<InterpolationContent> Contents)
-    {
-        public Interpolation(SemanticModel semantics, InterpolatedStringExpressionSyntax i)
-            : this([.. i.Contents.Select(c => InterpolationContent.Create(semantics, c))]) { }
-    }
-
     private readonly struct ArgumentList
     {
         private readonly object?[]? _values;
@@ -220,40 +132,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         public object? this[int index] => _values![index];
     }
 
-    private readonly struct ParameterList
-    {
-        private readonly string[]? _parameterNames;
-        private readonly Dictionary<string, string>? _nameToTypeTable;
-
-        public ParameterList(ParameterListSyntax? list)
-        {
-            if (list is null)
-            {
-                _parameterNames = null;
-                _nameToTypeTable = null;
-                return;
-            }
-
-            var names = new string[list.Parameters.Count];
-            Dictionary<string, string> d = [];
-            var i = 0;
-
-            foreach (var p in list.Parameters)
-            {
-                if (p.Type is not PredefinedTypeSyntax pd) continue; // todo: error
-                d.Add(p.Identifier.ValueText, pd.Keyword.ValueText);
-                names[i++] = p.Identifier.ValueText;
-            }
-
-            _parameterNames = names;
-            _nameToTypeTable = d;
-        }
-
-        public int Count => _parameterNames?.Length ?? 0;
-        public string this[int index] => _parameterNames![index];
-        public bool Contains(string parameterName) => _nameToTypeTable is { } t && t.ContainsKey(parameterName); 
-    }
-
     private readonly struct ParameterMap
     {
         private readonly Dictionary<string, object?>? _map;
@@ -268,73 +146,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         }
 
         public object? this[string parameterName] => _map is { } t && t.TryGetValue(parameterName, out var v) ? v : null;
-    }
-
-    private static (int level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
-    {
-        int? IntValue(ExpressionSyntax ex)
-        {
-            var v = semantics.GetConstantValue(ex);
-            if (v.HasValue && v.Value is int i) return i;
-            return null;
-        }
-        int level = 0;
-        if (e is InvocationExpressionSyntax { Expression: IdentifierNameSyntax n, ArgumentList.Arguments: var args })
-        {
-            var name = n.Identifier.ValueText;
-            if (name == "Parent" && args.Count == 1)
-            {
-                level = 1;
-                e = args[0].Expression;
-            }
-            else if (name == "Global" && args.Count == 1)
-            {
-                level = -1;
-                e = args[0].Expression;
-            }
-            if (name == "Up" && args.Count == 2 && IntValue(args[0].Expression) is int x)
-            {
-                level = x + 1;
-                e = args[1].Expression;
-            }
-            else if (name == "Down" && args.Count == 2 && IntValue(args[0].Expression) is int y)
-            {
-                level = -y;
-                e = args[1].Expression;
-            }
-            // else error?
-        }
-        return (level, e);
-    }
-
-    private record Template(int Level, Interpolation? Interpolation = null, string? Constant = null, string? Identifier = null)
-    {
-        public static Template Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
-        {
-            (var level, e) = GetLevelAndExpression(semantics, e);
-
-            if (e is InterpolatedStringExpressionSyntax i)
-            {
-                return new(level, Interpolation: new(semantics, i));
-            }
-            else if (e is IdentifierNameSyntax id)
-            {
-                var s0 = semantics.GetConstantValue(id);
-                if (s0.HasValue && s0.Value is string s) return new(level, Constant: s);
-
-                var name = id.Identifier.ValueText;
-                if (parameters.Contains(name) || name == "Type" || name == "Name")
-                    return new(level, Identifier: name);
-            }
-            else if (e is LiteralExpressionSyntax l)
-            {
-                var s0 = semantics.GetConstantValue(l);
-                if (s0.HasValue && s0.Value is string s) return new(level, Constant: s);
-            }
-
-            //todo: error
-            return new(0);
-        }
     }
 
     private readonly struct TemplateHierarchy
@@ -455,7 +266,6 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         }
     }
 
-    private record TemplateInfo(string Attribute, ParameterList Params, IEnumerable<Template> Templates);
     private record MemberInfo(string Attribute, ArgumentList Args, MemberDeclarationSyntax Member);
     private record GenerationInfo(string Attribute, TemplateHierarchy Templates, ParameterMap Params)
     {
