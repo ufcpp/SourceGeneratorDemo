@@ -17,7 +17,7 @@ internal readonly record struct InterpolationContent(string? Text = null, object
             var fmt = i.FormatClause?.FormatStringToken.ValueText;
 
             var e = i.Expression;
-            (var level, e) = IntrinsicMethod.GetLevelAndExpression(semantics, e);
+            (var level, e) = Intrinsic.GetLevelAndExpression(semantics, e);
 
             if (e is IdentifierNameSyntax id)
             {

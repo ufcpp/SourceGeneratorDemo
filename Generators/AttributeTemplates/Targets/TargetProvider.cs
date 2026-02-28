@@ -48,7 +48,7 @@ internal record TemplateTarget(string Attribute, ArgumentList Args, MemberDeclar
                 if (at.Type is not { } t) continue;
 
                 var bat = at.Type?.BaseType;
-                if (bat is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
+                if (bat.IsTemplateAttribute())
                 {
                     return (t.Name, new(semantics, a.ArgumentList));
                 }

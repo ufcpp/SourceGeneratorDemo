@@ -260,7 +260,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
                             }
                             else if (node.Identifier is { } id1)
                             {
-                                if (id1 == "Type")
+                                if (id1 == Intrinsic.Type)
                                 {
                                     if (node.Alignment is { } a)
                                     {
@@ -271,7 +271,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
                                         s.Append(Templates.GetNode(node.Level).Type);
                                     }
                                 }
-                                else if (id1 == "Name")
+                                else if (id1 == Intrinsic.Name)
                                 {
                                     if (node.Alignment is { } a)
                                     {

@@ -12,7 +12,7 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
             if (t is not PrimaryConstructorBaseTypeSyntax pc) continue;
 
             var ti = semantics.GetTypeInfo(t.Type);
-            if (ti.Type is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
+            if (ti.Type.IsTemplateAttribute())
             {
                 var templates = new MemberTemplate[pc.ArgumentList.Arguments.Count];
                 var i = 0;
@@ -29,7 +29,7 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
 
     public static MemberTemplate Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
     {
-        (var level, e) = IntrinsicMethod.GetLevelAndExpression(semantics, e);
+        (var level, e) = Intrinsic.GetLevelAndExpression(semantics, e);
 
         if (e is InterpolatedStringExpressionSyntax i)
         {
@@ -41,7 +41,7 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
             if (s0.HasValue && s0.Value is string s) return new(level, Constant: s);
 
             var name = id.Identifier.ValueText;
-            if (parameters.Contains(name) || name == "Type" || name == "Name")
+            if (parameters.Contains(name) || name == Intrinsic.Type || name == Intrinsic.Name)
                 return new(level, Identifier: name);
         }
         else if (e is LiteralExpressionSyntax l)
