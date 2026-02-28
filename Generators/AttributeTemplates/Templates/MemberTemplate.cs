@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Templates;
 
-internal record Template(int Level, Interpolation? Interpolation = null, string? Constant = null, string? Identifier = null)
+internal record MemberTemplate(int Level, Interpolation? Interpolation = null, string? Constant = null, string? Identifier = null)
 {
-    public static Template[]? Create(SemanticModel semantics, BaseListSyntax b, ParameterList parameters)
+    public static MemberTemplate[]? Create(SemanticModel semantics, BaseListSyntax b, ParameterList parameters)
     {
         foreach (var t in b.Types)
         {
@@ -14,7 +14,7 @@ internal record Template(int Level, Interpolation? Interpolation = null, string?
             var ti = semantics.GetTypeInfo(t.Type);
             if (ti.Type is { ContainingNamespace.Name: "AttributeTemplateGenerator", Name: "TemplateAttribute" })
             {
-                var templates = new Template[pc.ArgumentList.Arguments.Count];
+                var templates = new MemberTemplate[pc.ArgumentList.Arguments.Count];
                 var i = 0;
                 foreach (var arg in pc.ArgumentList.Arguments)
                 {
@@ -27,7 +27,7 @@ internal record Template(int Level, Interpolation? Interpolation = null, string?
         return null;
     }
 
-    public static Template Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
+    public static MemberTemplate Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
     {
         (var level, e) = IntrinsicMethod.GetLevelAndExpression(semantics, e);
 

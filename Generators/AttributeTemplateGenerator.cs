@@ -124,9 +124,9 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
 
     private readonly struct TemplateHierarchy
     {
-        private readonly (SyntaxNode Node, Template? Template)[] _templates;
+        private readonly (SyntaxNode Node, MemberTemplate? Template)[] _templates;
 
-        public TemplateHierarchy(IEnumerable<Template> templates, MemberDeclarationSyntax Member)
+        public TemplateHierarchy(IEnumerable<MemberTemplate> templates, MemberDeclarationSyntax Member)
         {
             static IEnumerable<SyntaxNode> enumerates(SyntaxNode node)
             {
@@ -137,7 +137,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
             // bottom (Member) to top (CompilationUnit)
             var nodes = enumerates(Member).ToArray();
 
-            var items = new (SyntaxNode Node, Template? Template)[nodes.Length];
+            var items = new (SyntaxNode Node, MemberTemplate? Template)[nodes.Length];
 
             for (var i = 0; i < nodes.Length ; ++i)
             {
@@ -158,7 +158,7 @@ public class AttributeTemplateGenerator : IIncrementalGenerator
         }
 
         public int Count => _templates.Length;
-        public IEnumerator<(SyntaxNode Node, Template? Template)> GetEnumerator() => _templates.AsEnumerable().GetEnumerator();
+        public IEnumerator<(SyntaxNode Node, MemberTemplate? Template)> GetEnumerator() => _templates.AsEnumerable().GetEnumerator();
 
         public MemberInfo GetNode(int level)
         {
