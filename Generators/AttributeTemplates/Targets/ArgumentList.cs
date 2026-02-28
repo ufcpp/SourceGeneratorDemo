@@ -22,7 +22,7 @@ internal readonly struct ArgumentList
         {
             var v = semantics.GetConstantValue(a.Expression);
             //if (!v.HasValue) todo: error
-            values[i++] = v;
+            values[i++] = v.Value;
         }
 
         _values = values;

@@ -101,8 +101,8 @@ internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, Pa
         {
             var formatString = (alignment, format) switch
             {
-                ({ } x, null) => $"{{0:{x}}}",
-                (null, { } x) => $"{{0,{x}}}",
+                ({ } x, null) => $"{{0,{x}}}",
+                (null, { } x) => $"{{0:{x}}}",
                 ({ } x, { } y) => $"{{0,{x}:{y}}}",
                 _ => "{0}",
             };

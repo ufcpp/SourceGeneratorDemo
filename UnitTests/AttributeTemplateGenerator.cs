@@ -15,8 +15,17 @@ using AttributeTemplateGenerator;
 using T = TTemplateAttribute;
 
 [T("// header")]
-[ConstStr<double>("Pi", 3.14159, CultureName = "fr")]
 internal partial class Class1;
+
+// todo: allows multiple attributes on the same class/struct
+[ConstStr("X", 1234.5)]
+internal partial class Class1_2;
+
+[ConstStr("X", 1234.5, CultureName = "fr")]
+internal partial class Class1_3;
+
+[ConstStr("X", 1234.5, CultureName = "fr")]
+internal partial class Class1_4;
 
 internal partial class Class2
 {
@@ -63,9 +72,9 @@ public static readonly Type This = typeof({Type});
 Global(header));
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal class ConstStrAttribute<T>(string name, T value) : TemplateAttribute(
+internal class ConstStrAttribute(string name, double value) : TemplateAttribute(
 $"""
-public const string {name} = {value};
+public const string {name} = "{value:n}";
 """);
 
 [AttributeUsage(AttributeTargets.Property)]

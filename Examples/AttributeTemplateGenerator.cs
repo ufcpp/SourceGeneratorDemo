@@ -2,7 +2,7 @@ using AttributeTemplateGenerator;
 using T = TTemplateAttribute;
 
 [T("// header")]
-[ConstStr<double>("Pi", 3.14159, CultureName = "fr")]
+[ConstStr("Pi", 3.14159, CultureName = "fr")]
 internal partial class Class1;
 
 internal partial class Class2
@@ -50,7 +50,7 @@ public static readonly Type This = typeof({Name});
 Global(header));
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal class ConstStrAttribute<T>(string name, T value) : TemplateAttribute(
+internal class ConstStrAttribute(string name, double value) : TemplateAttribute(
 $"""
 public const string {name} = {value};
 """);

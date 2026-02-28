@@ -22,7 +22,13 @@ internal readonly struct ParameterList
 
         foreach (var p in list.Parameters)
         {
-            if (p.Type is not PredefinedTypeSyntax pd) continue; // todo: error
+            if (p.Type is not PredefinedTypeSyntax pd)
+            {
+                //todo: support when p.Type is a generic parameter type
+
+                continue; // todo: error
+            }
+
             d.Add(p.Identifier.ValueText, pd.Keyword.ValueText);
             names[i++] = p.Identifier.ValueText;
         }
