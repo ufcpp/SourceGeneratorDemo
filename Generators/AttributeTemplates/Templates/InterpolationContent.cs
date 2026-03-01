@@ -23,6 +23,10 @@ internal readonly record struct InterpolationContent(string? Text = null, object
             {
                 return new(Identifier: id.Identifier.ValueText, Level: level, Alignment: align, Format: fmt);
             }
+            else if (e is LiteralExpressionSyntax l)
+            {
+                return new(ConstantValue: l.Token.Value, Level: level, Alignment: align, Format: fmt);
+            }
             else
             {
                 var v = semantics.GetConstantValue(e);

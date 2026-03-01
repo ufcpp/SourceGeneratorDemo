@@ -159,6 +159,23 @@ partial class Class1 {
 ]);
 
     [Fact]
+    public void ConstInterpolation() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute($"// {1}{'2'}{"34"}");
+
+[A]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1234
+}
+
+"""),
+]);
+
+    [Fact]
     public void TemplateLevel() => Run(""""
 using AttributeTemplateGenerator;
 
