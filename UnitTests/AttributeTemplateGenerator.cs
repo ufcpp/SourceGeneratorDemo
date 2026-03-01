@@ -15,17 +15,12 @@ using AttributeTemplateGenerator;
 using T = TTemplateAttribute;
 
 [T("// header")]
+[ConstStr("Invariant", 1234.5)]
+[ConstStr("De", 1234.5, CultureName = "de")]
+[ConstStr("Fr", 1234.5, CultureName = "fr")]
 internal partial class Class1;
 
-// todo: allows multiple attributes on the same class/struct
-[ConstStr("X", 1234.5)]
-internal partial class Class1_2;
-
-[ConstStr("X", 1234.5, CultureName = "de")]
-internal partial class Class1_3;
-
-[ConstStr("X", 1234.5, CultureName = "fr")]
-internal partial class Class1_4;
+internal partial class None;
 
 internal partial class Class2
 {

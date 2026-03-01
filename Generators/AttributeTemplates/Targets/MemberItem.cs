@@ -4,13 +4,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Targets;
 
-internal abstract class Member
+internal abstract class MemberItem
 {
     public static readonly Root RootInstance = new();
 
-    internal class Root : Member;
+    internal class Root : MemberItem;
 
-    internal abstract class NamedMember : Member
+    internal abstract class NamedMember : MemberItem
     {
         public required string Name { get; init; }
     }
@@ -40,19 +40,7 @@ internal abstract class Member
 
     internal record Parameter(string Name, string Type);
 
-    public static Member[] Hierarchy(MemberDeclarationSyntax member)
-    {
-        var list = new List<Member>();
-
-        // bottom (Member) to top (CompilationUnit)
-        for (SyntaxNode? m = member; m != null; m = m.Parent)
-        {
-            list.Add(From(m));
-        }
-        return [.. list];
-    }
-
-    public static Member From(SyntaxNode member) => member switch
+    public static MemberItem From(SyntaxNode member) => member switch
     {
         PropertyDeclarationSyntax p => new Property
         {

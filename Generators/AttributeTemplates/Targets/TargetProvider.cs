@@ -6,13 +6,13 @@ namespace Generators.AttributeTemplates.Targets;
 
 internal static class TargetProvider
 {
-    public static IncrementalValuesProvider<TemplateTarget> CreateTargetSyntaxProvider(this IncrementalGeneratorInitializationContext context)
+    public static IncrementalValuesProvider<TemporaryTemplateTarget> CreateTargetSyntaxProvider(this IncrementalGeneratorInitializationContext context)
         => context.SyntaxProvider.CreateTargetSyntaxProvider();
 
-    public static IncrementalValuesProvider<TemplateTarget> CreateTargetSyntaxProvider(this SyntaxValueProvider syntaxProvider)
+    public static IncrementalValuesProvider<TemporaryTemplateTarget> CreateTargetSyntaxProvider(this SyntaxValueProvider syntaxProvider)
         => syntaxProvider.CreateSyntaxProvider(
             IsTemplateMember,
-            static (context, _) => TemplateTarget.Create(context)
+            static (context, _) => TemporaryTemplateTarget.Create(context)
             )
         .Where(t => t != null)!;
 

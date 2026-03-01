@@ -4,20 +4,20 @@ namespace Generators.AttributeTemplates.Templates;
 
 internal readonly struct ParameterList
 {
-    private readonly string[]? _parameterNames;
-    private readonly Dictionary<string, string>? _nameToTypeTable;
+    private readonly (string name, string type)[]? _parameters;
+    private readonly Dictionary<string, int>? _table;
 
     public ParameterList(ParameterListSyntax? list)
     {
         if (list is null)
         {
-            _parameterNames = null;
-            _nameToTypeTable = null;
+            _parameters = null;
+            _table = null;
             return;
         }
 
-        var names = new string[list.Parameters.Count];
-        Dictionary<string, string> d = [];
+        var parameters = new (string, string)[list.Parameters.Count];
+        Dictionary<string, int> d = [];
         var i = 0;
 
         foreach (var p in list.Parameters)
@@ -29,15 +29,16 @@ internal readonly struct ParameterList
                 continue; // todo: error
             }
 
-            d.Add(p.Identifier.ValueText, pd.Keyword.ValueText);
-            names[i++] = p.Identifier.ValueText;
+            d.Add(p.Identifier.ValueText, i);
+            parameters[i++] = (p.Identifier.ValueText, pd.Keyword.ValueText);
         }
 
-        _parameterNames = names;
-        _nameToTypeTable = d;
+        _parameters = parameters;
+        _table = d;
     }
 
-    public int Count => _parameterNames?.Length ?? 0;
-    public string this[int index] => _parameterNames![index];
-    public bool Contains(string parameterName) => _nameToTypeTable is { } t && t.ContainsKey(parameterName);
+    public int Count => _parameters?.Length ?? 0;
+    public string this[int index] => _parameters![index].name;
+    public int? GetIndex(string name) => _table is { } t && t.TryGetValue(name, out var i) ? i : null;
+    public bool Contains(string parameterName) => _table is { } t && t.ContainsKey(parameterName);
 }
