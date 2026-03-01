@@ -14,6 +14,25 @@ public class AttributeTemplateGeneratorTests
         => Helpers.RunGenerator(_generator, targetSource, generatedSources);
 
     [Fact]
+    public void IgnoreUnrelatedAttribute() => Run(""""
+
+[Unrelated]
+internal partial class Unrelated
+{
+    [Unrelated]
+    internal partial class A
+    {
+        [Unrelated]
+        public partial int P { get; }
+    }
+}
+
+internal class UnrelatedAttribute : Attribute;
+
+        
+"""");
+
+    [Fact]
     public void Culture() => Run(
 """"
 using AttributeTemplateGenerator;
@@ -241,31 +260,83 @@ get { return 0; }
 ]);
 
     [Fact]
-    public void Generate()
-    {
-        Run(
-"""""
-using AttributeTemplateGenerator;
-using T = TTemplateAttribute;
+    public void NameIntrinsic() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Name}"
+);
 
-[T("// header")]
-[ConstStr("Invariant", 1234.5)]
-[ConstStr("De", 1234.5, CultureName = "de")]
-[ConstStr("Fr", 1234.5, CultureName = "fr")]
-internal partial class Class1;
-
-internal partial class Class2
+[A]
+partial class Class1
 {
-    [PTemplate(12)]
-    public partial int X { get; }
-
-
-    public partial class Inner
+    [A]
+    partial class Class2
     {
-        [MTemplate(34)]
-        public partial int M(int a, int b);
+        [A]
+        public partial int P { get; }
     }
 }
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// Class1
+}
+
+"""),
+new("ATG_Class1.Class2","""
+partial class Class1 {
+partial class Class2 {
+// Class2
+}}
+
+"""),
+new("ATG_Class1.Class2.P","""
+partial class Class1 {
+partial class Class2 {
+public partial int P {
+// P
+}}}
+
+"""),
+]);
+
+    [Fact]
+    public void TypeIntrinsic() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Type}"
+);
+
+partial class Class1
+{
+    [A]
+    public partial int P { get; }
+
+    [A]
+    public partial string M();
+}
+
+        
+"""", [
+new("ATG_Class1.M()","""
+partial class Class1 {
+public partial string M() {
+// string
+}}
+
+"""),
+new("ATG_Class1.P","""
+partial class Class1 {
+public partial int P {
+// int
+}}
+
+"""),
+]);
+
+    [Fact]
+    public void LevelIntrinsic() => Run(""""
+using AttributeTemplateGenerator;
 
 namespace A1
 {
@@ -281,8 +352,8 @@ namespace A1
                     {
                         partial record struct RS
                         {
-                            [MTemplate(56)]
-                            public partial int M(int a, int b);
+                            [A]
+                            public partial int P { get; }
                         }
                     }
                 }
@@ -291,33 +362,31 @@ namespace A1
     }
 }
 
-[Unrelated]
-internal partial class Unrelated
-{
-    [Unrelated]
-    internal partial class A
-    {
-        [Unrelated]
-        public partial int P { get; }
-    }
-}
-
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal class TTemplateAttribute(string header) : TemplateAttribute(
-$"""
-public static readonly Type This = typeof({Name});
-""",
-Global(header));
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal class ConstStrAttribute(string name, double value) : TemplateAttribute(
-$"""
-public const string {name} = "{value:n}";
-""");
-
 [AttributeUsage(AttributeTargets.Property)]
-internal class PTemplateAttribute(int n) : TemplateAttribute(
+internal class AAttribute : TemplateAttribute(
+$"// {Name} {Parent(Name)} {Up(1,Name)} {Down(1, Name)}"
+);
+
+"""", [
+new("ATG_A1.A2.A3.C.S.R.RC.RS.P","""
+namespace A1 {
+namespace A2.A3 {
+partial class C {
+partial struct S {
+partial record R {
+partial record RC {
+partial record struct RS {
+public partial int P {
+// P RS RC A1
+}}}}}}}}
+
+"""),
+]);
+
+    [Fact]
+    public void TemplateParameter() => Run(""""
+[AttributeUsage(AttributeTargets.Property)]
+internal class AAttribute(int n) : AttributeTemplateGenerator.TemplateAttribute(
 $"""
 get => field + {n};
 set => field = value - {n};
@@ -326,18 +395,82 @@ Parent($"""
 public const int {Name}Offset = {n};
 """));
 
-[AttributeUsage(AttributeTargets.Method)]
-internal class MTemplateAttribute(int n) : TemplateAttribute(
-$"""
-return {n} * {Name, 0} * {Name, 1};
-""",
-Down(1, "// comment"),
-Up(2, $"""
-// comment {Type} {Parent(Name)}.{Name}({Type,0} {Name,0}, {Type,1} {Name,1})
-"""));
+partial class Class1
+{
+    [A(1)]
+    public partial int P { get; }
 
-internal class UnrelatedAttribute : Attribute;
+    [A(2)]
+    public partial int Q { get; }
+}
 
-""""");
+        
+"""", [
+new("ATG_Class1.P","""
+partial class Class1 {
+public const int POffset = 1;
+public partial int P {
+get => field + 1;
+set => field = value - 1;
+}}
+
+"""),
+new("ATG_Class1.Q","""
+partial class Class1 {
+public const int QOffset = 2;
+public partial int Q {
+get => field + 2;
+set => field = value - 2;
+}}
+
+"""),
+]);
+
+    [Fact]
+    public void ParameterIntrinsic()
+    {
+        Run(
+"""""
+class AAttribute(int n) : AttributeTemplateGenerator.TemplateAttribute($"""
+// {Type,0} * {Type,1}
+return {n}  * {Name, 0} * {Name, 1};
+"""
+);
+
+partial class Class1
+{
+    [A(34)]
+    public partial double M(int a, float b);
+}
+
+""""", [
+new("ATG_Class1.M(int, float)", """
+partial class Class1 {
+public partial double M(int a, float b) {
+// int * float
+return 34  * a * b;
+}}
+
+"""),
+]);
     }
+
+#if false
+    [Fact]
+    public void X() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+);
+
+[A]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+}
+
+"""),
+]);
+#endif
 }
