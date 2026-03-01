@@ -102,7 +102,7 @@ internal static class Generator
 
                 foreach (var mt in template.Templates)
                 {
-                    var c = Evaluate(mt.Expression, target.Member, map, args.Culture);
+                    var c = Evaluate(mt.Expression, target.Member, map);
                     var i = target.Member.GetIndex(mt.Level);
                     contents[i] += c + @"
 ";
@@ -113,7 +113,7 @@ internal static class Generator
         return contents;
     }
 
-    private static object? Evaluate(E ex, MemberHierarchy member, ParameterMap map, IFormatProvider provider)
+    private static object? Evaluate(E ex, MemberHierarchy member, ParameterMap map)
     {
         if (ex is E.Constant cv)
         {
@@ -141,7 +141,7 @@ internal static class Generator
                 }
                 else if (c is E.InterpolatedString.Interpolation interpolation)
                 {
-                    var value = Evaluate(interpolation.Expression, member, map, provider);
+                    var value = Evaluate(interpolation.Expression, member, map);
 
                     var formatString = (interpolation.Alignment, interpolation.Format) switch
                     {
@@ -151,7 +151,7 @@ internal static class Generator
                         _ => "{0}",
                     };
 
-                    s.AppendFormat(provider, formatString, value);
+                    s.AppendFormat(map.Culture, formatString, value);
                 }
             }
             return s.ToString();
