@@ -1,7 +1,7 @@
 using Generators.AttributeTemplates.Targets;
 using Generators.AttributeTemplates.Templates;
 using System.Text;
-using static Generators.AttributeTemplates.Targets.MemberItem;
+using M = Generators.AttributeTemplates.Targets.MemberItem;
 using E = Generators.AttributeTemplates.Templates.MemberExpression;
 
 namespace Generators.AttributeTemplates.Application;
@@ -29,7 +29,7 @@ internal static class Generator
         return s.ToString();
     }
 
-    private static void GenerateMemberDeclaration(StringBuilder s, MemberItem node)
+    private static void GenerateMemberDeclaration(StringBuilder s, M node)
     {
         void appendModifiers(string[] modifiers)
         {
@@ -40,17 +40,17 @@ internal static class Generator
             }
         }
 
-        if (node is Root)
+        if (node is M.Root)
         {
         }
-        else if (node is Namespace n)
+        else if (node is M.Namespace n)
         {
             s.Append($$"""
                         namespace {{n.Name}} {
 
                         """);
         }
-        else if (node is TypeDeclaration type)
+        else if (node is M.TypeDeclaration type)
         {
             appendModifiers(type.Modifiers);
 
@@ -59,7 +59,7 @@ internal static class Generator
 
                         """);
         }
-        else if (node is Property p)
+        else if (node is M.Property p)
         {
             appendModifiers(p.Modifiers);
             s.Append($$"""
@@ -67,7 +67,7 @@ internal static class Generator
 
                         """);
         }
-        else if (node is Method m)
+        else if (node is M.Method m)
         {
             appendModifiers(m.Modifiers);
             s.Append($$"""
@@ -158,64 +158,4 @@ internal static class Generator
         }
         else { return null; } // error? unreachable?
     }
-
-    //private static string Apply(MemberTemplate mt, ParameterMap map, MemberHierarchy member, IFormatProvider provider)
-    //{
-    //    var s = new StringBuilder();
-
-    //    void appendFormat(object? value, int? alignment = null, string? format = null)
-    //    {
-    //        var formatString = (alignment, format) switch
-    //        {
-    //            ({ } x, null) => $"{{0,{x}}}",
-    //            (null, { } x) => $"{{0:{x}}}",
-    //            ({ } x, { } y) => $"{{0,{x}:{y}}}",
-    //            _ => "{0}",
-    //        };
-
-    //        s.AppendFormat(provider, formatString, value); // todo: take culture
-    //    }
-
-    //    var ex = mt.Expression;
-
-    //    if (ex is E.Constant cv)
-    //    {
-    //        appendFormat(cv.Value);
-    //    }
-    //    else if (ex is E.Parameter { Name: var id })
-    //    {
-    //        var value = map[id];
-    //        appendFormat(value);
-    //    }
-    //    else if (ex is E.InterpolatedString i)
-    //    {
-    //        foreach (var c in i.Contents)
-    //        {
-    //            if (c.Text is { } text)
-    //            {
-    //                s.Append(text);
-    //            }
-    //            else if (c.ConstantValue is { } c1)
-    //            {
-    //                appendFormat(c1, c.Alignment, c.Format);
-    //            }
-    //            else if (c.Identifier is { } id1)
-    //            {
-    //                if (member.TryGetIntrinsicValue(id1, c.Alignment, c.Level, out var iv))
-    //                {
-    //                    s.Append(iv);
-    //                }
-    //                else
-    //                {
-    //                    // must be distinguish "not found" and "found null"
-    //                    var value = map[id1];
-    //                    appendFormat(value, c.Alignment, c.Format);
-    //                }
-    //            }
-    //        }
-    //    }
-    //    else { }
-
-    //    return s.ToString();
-    //}
 }
