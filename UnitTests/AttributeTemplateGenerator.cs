@@ -487,8 +487,8 @@ set => field = value - 2;
         Run(
 """""
 class AAttribute(int n) : AttributeTemplateGenerator.TemplateAttribute($"""
-// {Type,0} * {Type,1}
-return {n}  * {Name, 0} * {Name, 1};
+// ({Param(0, Type),8}/{Param(0, Name),-8})
+return {n} * {Param(0, Name)} * {Param(1, Name)};
 """
 );
 
@@ -502,8 +502,8 @@ partial class Class1
 new("ATG_Class1.M(int, float)", """
 partial class Class1 {
 public partial double M(int a, float b) {
-// int * float
-return 34  * a * b;
+// (     int/a       )
+return 34 * a * b;
 }}
 
 """),
@@ -530,5 +530,5 @@ partial class Class1 {
 #endif
 
     //todo: erroneous case
-    // class AAttribute : TemplateAttribute($"template"); // correctly: class AAttribute() <- parens needed
+    // class AAttribute : TemplateAttribute($"template"); // correctly: class AAttribute() <- paren needed
 }

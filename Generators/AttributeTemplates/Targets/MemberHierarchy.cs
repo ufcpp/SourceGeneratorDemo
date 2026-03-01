@@ -36,7 +36,7 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
         return level < 0 ? _items.Length + level : level;
     }
 
-    public bool TryGetIntrinsicValue(string id, int? alignment, int level, out string? value)
+    public bool TryGetIntrinsicValue(string id, int level, int? parameterIndex, out string? value)
     {
         // todo: error if null or out of range?
 
@@ -44,7 +44,7 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
 
         if (id == Intrinsic.Type)
         {
-            if (alignment is { } a) // {Type,a}
+            if (parameterIndex is { } a) // {Type,a}
             {
                 // combination with level? (primary constructor parameters?)
                 // {Parent(Type),a}
@@ -59,7 +59,7 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
         }
         else if (id == Intrinsic.Name)
         {
-            if (alignment is { } a) // {Name,a}
+            if (parameterIndex is { } a) // {Name,a}
             {
                 value = (member as Method)?.Parameters[a].Name;
             }

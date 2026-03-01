@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Templates;
 
-internal record MemberTemplate(int Level, Interpolation? Interpolation = null, string? Constant = null, string? Identifier = null)
+internal record MemberTemplate(int Level, MemberExpression Expression)
 {
     public static MemberTemplate[]? Create(SemanticModel semantics, BaseListSyntax b, ParameterList parameters)
     {
@@ -18,7 +18,7 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
                 var i = 0;
                 foreach (var arg in pc.ArgumentList.Arguments)
                 {
-                    templates[i++] = Create(semantics, parameters, arg.Expression);
+                    templates[i++] = Create(semantics, arg.Expression, parameters);
                 }
                 return templates;
             }
@@ -27,29 +27,9 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
         return null;
     }
 
-    public static MemberTemplate Create(SemanticModel semantics, ParameterList parameters, ExpressionSyntax e)
+    public static MemberTemplate Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
     {
         (var level, e) = Intrinsic.GetLevelAndExpression(semantics, e);
-
-        if (e is InterpolatedStringExpressionSyntax i)
-        {
-            return new(level, Interpolation: new(semantics, i));
-        }
-        else if (e is IdentifierNameSyntax id)
-        {
-            var s0 = semantics.GetConstantValue(id);
-            if (s0.HasValue && s0.Value is string s) return new(level, Constant: s);
-
-            var name = id.Identifier.ValueText;
-            if (parameters.Contains(name) || name == Intrinsic.Type || name == Intrinsic.Name)
-                return new(level, Identifier: name);
-        }
-        else if (e is LiteralExpressionSyntax l)
-        {
-            return new(level, Constant: l.Token.ValueText);
-        }
-
-        //todo: error
-        return new(0);
+        return new(level, MemberExpression.Create(semantics, e, parameters));
     }
 }

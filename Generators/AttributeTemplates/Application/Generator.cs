@@ -2,6 +2,7 @@ using Generators.AttributeTemplates.Targets;
 using Generators.AttributeTemplates.Templates;
 using System.Text;
 using static Generators.AttributeTemplates.Targets.MemberItem;
+using E = Generators.AttributeTemplates.Templates.MemberExpression;
 
 namespace Generators.AttributeTemplates.Application;
 
@@ -101,7 +102,7 @@ internal static class Generator
 
                 foreach (var mt in template.Templates)
                 {
-                    var c = Apply(mt, map, target.Member, args.Culture);
+                    var c = Evaluate(mt.Expression, target.Member, map, args.Culture);
                     var i = target.Member.GetIndex(mt.Level);
                     contents[i] += c + @"
 ";
@@ -112,61 +113,109 @@ internal static class Generator
         return contents;
     }
 
-    private static string Apply(MemberTemplate mt, ParameterMap map, MemberHierarchy member, IFormatProvider provider)
+    private static object? Evaluate(E ex, MemberHierarchy member, ParameterMap map, IFormatProvider provider)
     {
-        var s = new StringBuilder();
-
-        void appendFormat(object? value, int? alignment = null, string? format = null)
+        if (ex is E.Constant cv)
         {
-            var formatString = (alignment, format) switch
-            {
-                ({ } x, null) => $"{{0,{x}}}",
-                (null, { } x) => $"{{0:{x}}}",
-                ({ } x, { } y) => $"{{0,{x}:{y}}}",
-                _ => "{0}",
-            };
-
-            s.AppendFormat(provider, formatString, value); // todo: take culture
+            return cv.Value;
         }
+        else if (ex is E.Parameter { Name: var id })
+        {
+            return map[id];
+        }
+        else if (ex is E.IntrinsicExpression ie)
+        {
+            if (member.TryGetIntrinsicValue(ie.Kind, ie.Level, ie.ParameterIndex, out var iv))
+                return iv;
 
-        if (mt.Constant is { } constValue)
-        {
-            s.Append(constValue);
+            return null; // else error?
         }
-        else if (mt.Identifier is { } id)
+        else if (ex is E.InterpolatedString i)
         {
-            var value = map[id];
-            appendFormat(value);
-        }
-        else if (mt.Interpolation is { } i)
-        {
+            var s = new StringBuilder();
             foreach (var c in i.Contents)
             {
-                if (c.Text is { } text)
+                if (c is E.InterpolatedString.StringText text)
                 {
-                    s.Append(text);
+                    s.Append(text.Text);
                 }
-                else if (c.ConstantValue is { } c1)
+                else if (c is E.InterpolatedString.Interpolation interpolation)
                 {
-                    appendFormat(c1, c.Alignment, c.Format);
-                }
-                else if (c.Identifier is { } id1)
-                {
-                    if (member.TryGetIntrinsicValue(id1, c.Alignment, c.Level, out var iv))
+                    var value = Evaluate(interpolation.Expression, member, map, provider);
+
+                    var formatString = (interpolation.Alignment, interpolation.Format) switch
                     {
-                        s.Append(iv);
-                    }
-                    else
-                    {
-                        // must be distinguish "not found" and "found null"
-                        var value = map[id1];
-                        appendFormat(value, c.Alignment, c.Format);
-                    }
+                        ({ } x, null) => $"{{0,{x}}}",
+                        (null, { } x) => $"{{0:{x}}}",
+                        ({ } x, { } y) => $"{{0,{x}:{y}}}",
+                        _ => "{0}",
+                    };
+
+                    s.AppendFormat(provider, formatString, value);
                 }
             }
+            return s.ToString();
         }
-        else { }
-
-        return s.ToString();
+        else { return null; } // error? unreachable?
     }
+
+    //private static string Apply(MemberTemplate mt, ParameterMap map, MemberHierarchy member, IFormatProvider provider)
+    //{
+    //    var s = new StringBuilder();
+
+    //    void appendFormat(object? value, int? alignment = null, string? format = null)
+    //    {
+    //        var formatString = (alignment, format) switch
+    //        {
+    //            ({ } x, null) => $"{{0,{x}}}",
+    //            (null, { } x) => $"{{0:{x}}}",
+    //            ({ } x, { } y) => $"{{0,{x}:{y}}}",
+    //            _ => "{0}",
+    //        };
+
+    //        s.AppendFormat(provider, formatString, value); // todo: take culture
+    //    }
+
+    //    var ex = mt.Expression;
+
+    //    if (ex is E.Constant cv)
+    //    {
+    //        appendFormat(cv.Value);
+    //    }
+    //    else if (ex is E.Parameter { Name: var id })
+    //    {
+    //        var value = map[id];
+    //        appendFormat(value);
+    //    }
+    //    else if (ex is E.InterpolatedString i)
+    //    {
+    //        foreach (var c in i.Contents)
+    //        {
+    //            if (c.Text is { } text)
+    //            {
+    //                s.Append(text);
+    //            }
+    //            else if (c.ConstantValue is { } c1)
+    //            {
+    //                appendFormat(c1, c.Alignment, c.Format);
+    //            }
+    //            else if (c.Identifier is { } id1)
+    //            {
+    //                if (member.TryGetIntrinsicValue(id1, c.Alignment, c.Level, out var iv))
+    //                {
+    //                    s.Append(iv);
+    //                }
+    //                else
+    //                {
+    //                    // must be distinguish "not found" and "found null"
+    //                    var value = map[id1];
+    //                    appendFormat(value, c.Alignment, c.Format);
+    //                }
+    //            }
+    //        }
+    //    }
+    //    else { }
+
+    //    return s.ToString();
+    //}
 }
