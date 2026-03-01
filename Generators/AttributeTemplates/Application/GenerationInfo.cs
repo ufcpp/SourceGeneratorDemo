@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Generators.AttributeTemplates.Application;
 
-internal record GenerationInfo(string Attribute, TemplateHierarchy Templates, ParameterMap Params)
+internal record GenerationInfo(string MemberId, string AttributeId, TemplateHierarchy Templates, ParameterMap Params)
 {
     private IFormatProvider FormatProvider => field ??= Params.GetCultureInfo();
 

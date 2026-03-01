@@ -75,22 +75,4 @@ internal readonly struct TemplateHierarchy
         return false;
 
     }
-
-    public string GetId()
-    {
-        var sb = new StringBuilder();
-
-        foreach (var (node, _) in this)
-        {
-            if (node is NamedMember n)
-            {
-                sb.Append(n.Name).Append('.');
-            }
-
-            //todo: method arity
-            //todo: generic type arity
-            //todo: parameter types for method overloads
-        }
-        return sb.ToString();
-    }
 }

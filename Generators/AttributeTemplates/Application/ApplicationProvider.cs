@@ -20,8 +20,8 @@ internal static class ApplicationProvider
     {
         return memberProvider.Combine(templateProvider.Collect())
             .SelectMany((t, _) => t.Right
-                .Where(x => x!.Attribute == t.Left!.Attribute)
-                .Select(f => new GenerationInfo(f!.Attribute, new(f.Templates, t.Left!.Members), new(f.Params, t.Left.Args)))
+                .Where(x => x!.AttributeId == t.Left!.AttributeId)
+                .Select(f => new GenerationInfo(t.Left.MemberId, f!.AttributeId, new(f.Templates, t.Left!.Members), new(f.Params, t.Left.Args)))
             )
             .Where(x => x != null);
     }
@@ -31,7 +31,7 @@ internal static class ApplicationProvider
         context.RegisterSourceOutput(provider, (context, info) =>
         {
             var code = info.Generate();
-            context.AddSource($"ATG_{info.Attribute}_{info.Templates.GetId()}g.cs", code);
+            context.AddSource($"ATG_{info.AttributeId}_{info.MemberId}.g.cs", code);
         });
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Targets;
 
-internal record TemplateTarget(string Attribute, ArgumentList Args, Member[] Members)
+internal record TemplateTarget(string MemberId, string AttributeId, ArgumentList Args, Member[] Members)
 {
     public static TemplateTarget? Create(GeneratorSyntaxContext context)
     {
@@ -13,10 +13,10 @@ internal record TemplateTarget(string Attribute, ArgumentList Args, Member[] Mem
 
         if (GetAttribute(d, semantics) is not { } t) return null;
 
-        return new(t.Name, t.Args, Member.Hierarchy(d));
+        return new(semantics.GetUniqueId(d), t.Signature, t.Args, Member.Hierarchy(d));
     }
 
-    private static (string Name, ArgumentList Args)? GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)
+    private static (string Signature, ArgumentList Args)? GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)
     {
         foreach (var list in d.AttributeLists)
         {
@@ -29,7 +29,7 @@ internal record TemplateTarget(string Attribute, ArgumentList Args, Member[] Mem
                 var bat = at.Type?.BaseType;
                 if (bat.IsTemplateAttribute())
                 {
-                    return (t.Name, new(semantics, a.ArgumentList));
+                    return (t.GetUniqueId(), new(semantics, a.ArgumentList));
                 }
             }
         }
