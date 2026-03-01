@@ -47,6 +47,9 @@ internal readonly struct TemplateHierarchy
         {
             if (alignment is { } a) // {Type,a}
             {
+                // combination with level? (primary constructor parameters?)
+                // {Parent(Type),a}
+
                 value = MethodParameters?[a].Type;
             }
             else // {Type}, {Parent(Type)}, {Up(level, Type)}, etc.
