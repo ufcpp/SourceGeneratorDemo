@@ -20,8 +20,6 @@ using T = TTemplateAttribute;
 [ConstStr("Fr", 1234.5, CultureName = "fr")]
 internal partial class Class1;
 
-internal partial class None;
-
 internal partial class Class2
 {
     [PTemplate(12)]
@@ -59,6 +57,18 @@ namespace A1
     }
 }
 
+[Unrelated]
+internal partial class Unrelated
+{
+    [Unrelated]
+    internal partial class A
+    {
+        [Unrelated]
+        public partial int P { get; }
+    }
+}
+
+
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 internal class TTemplateAttribute(string header) : TemplateAttribute(
 $"""
@@ -91,6 +101,8 @@ Down(1, "// comment"),
 Up(2, $"""
 // comment {Type} {Parent(Name)}.{Name}({Type,0} {Name,0}, {Type,1} {Name,1})
 """));
+
+internal class UnrelatedAttribute : Attribute;
 
 """"");
     }

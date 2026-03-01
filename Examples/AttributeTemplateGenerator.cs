@@ -2,7 +2,9 @@ using AttributeTemplateGenerator;
 using T = TTemplateAttribute;
 
 [T("// header")]
-[ConstStr("Pi", 3.14159, CultureName = "fr")]
+[ConstStr("Invariant", 1234.5)]
+[ConstStr("De", 1234.5, CultureName = "de")]
+[ConstStr("Fr", 1234.5, CultureName = "fr")]
 internal partial class Class1;
 
 internal partial class Class2
@@ -49,10 +51,10 @@ public static readonly Type This = typeof({Name});
 """,
 Global(header));
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 internal class ConstStrAttribute(string name, double value) : TemplateAttribute(
 $"""
-public const string {name} = {value};
+public const string {name} = "{value}";
 """);
 
 [AttributeUsage(AttributeTargets.Property)]

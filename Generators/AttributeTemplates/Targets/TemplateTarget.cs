@@ -35,14 +35,18 @@ internal record TemporaryTemplateTarget(string MemberId, MemberDeclarationSyntax
         return new(semantics.GetUniqueId(d), d, [.. args]);
     }
 
-    private static IEnumerable<ArgumentList> GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)
+    private static List<ArgumentList>? GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)
     {
+        List<ArgumentList>? results = null;
+
         foreach (var list in d.AttributeLists)
         {
             foreach (var a in list.Attributes)
             {
-                if (ArgumentList.Create(semantics, a) is { } args) yield return args;
+                if (ArgumentList.Create(semantics, a) is { } args) (results ??= []).Add(args);
             }
         }
+
+        return results;
     }
 }
