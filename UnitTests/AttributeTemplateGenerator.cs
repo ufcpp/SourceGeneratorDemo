@@ -195,6 +195,61 @@ partial class Class1 {
 ]);
 
     [Fact]
+    public void RefersConstMember() => Run(""""
+class Constants
+{
+    public const int N = 1;
+}
+
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"// {Constants.N}{C}{S}")
+{
+    public const char C = '2';
+    public const string S = "34";
+}
+
+[A]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1234
+}
+
+"""),
+]);
+
+    [Fact]
+    public void FormatClause() => Run(
+""""
+class AAttribute(double value) : AttributeTemplateGenerator.TemplateAttribute(
+$"""
+// ({value:n1})
+// ({value,8:n1})
+// ({value,-8:n1})
+// ({value:000.000})
+// ({value:e2})
+""");
+
+[A(12.34)]
+internal partial class Class1;
+
+"""",
+[
+new("ATG_Class1", """
+internal partial class Class1 {
+// (12.3)
+// (    12.3)
+// (12.3    )
+// (012.340)
+// (1.23e+001)
+}
+
+"""),
+]);
+
+    [Fact]
     public void TemplateLevel() => Run(""""
 using AttributeTemplateGenerator;
 
@@ -473,4 +528,7 @@ partial class Class1 {
 """),
 ]);
 #endif
+
+    //todo: erroneous case
+    // class AAttribute : TemplateAttribute($"template"); // correctly: class AAttribute() <- parens needed
 }

@@ -21,17 +21,25 @@ internal readonly record struct InterpolationContent(string? Text = null, object
 
             if (e is IdentifierNameSyntax id)
             {
-                return new(Identifier: id.Identifier.ValueText, Level: level, Alignment: align, Format: fmt);
+                var name = id.Identifier.ValueText;
+                if (name is not (Intrinsic.Name or Intrinsic.Type))
+                {
+                    var v = semantics.GetConstantValue(id);
+                    if (v.HasValue) return new(ConstantValue: v.Value, Level: level, Alignment: align, Format: fmt);
+                }
+
+                return new(Identifier: name, Level: level, Alignment: align, Format: fmt);
             }
             else if (e is LiteralExpressionSyntax l)
             {
                 return new(ConstantValue: l.Token.Value, Level: level, Alignment: align, Format: fmt);
             }
-            else
+            else if (e is MemberAccessExpressionSyntax m)
             {
-                var v = semantics.GetConstantValue(e);
+                var v = semantics.GetConstantValue(m);
                 if (v.HasValue) return new(ConstantValue: v.Value, Level: level, Alignment: align, Format: fmt);
             }
+            else { }
         }
         return default;
     }
