@@ -23,7 +23,7 @@ internal static class Generator
         s.Append('}', target.Member.Count - 1);
         // source-code-dependent LF.
         s.Append(@"
-        ");
+");
 
         return s.ToString();
     }
