@@ -228,7 +228,7 @@ partial class C {
 partial struct S {
 // Up 3
 partial record R {
-partial record class RC {
+partial record RC {
 // Up 1
 partial record struct RS {
 // Parent

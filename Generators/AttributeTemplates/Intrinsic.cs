@@ -54,6 +54,11 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     {
         int? IntValue(ExpressionSyntax ex)
         {
+            if (ex is LiteralExpressionSyntax l && l.Token.Value is int literalValue)
+            {
+                return literalValue;
+            }
+
             var v = semantics.GetConstantValue(ex);
             if (v.HasValue && v.Value is int i) return i;
             return null;
@@ -79,7 +84,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             }
             else if (name == Down && args.Count == 2 && IntValue(args[0].Expression) is int y)
             {
-                level = -y;
+                level = -y - 1;
                 e = args[1].Expression;
             }
             // else error?
