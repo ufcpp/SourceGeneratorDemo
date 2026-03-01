@@ -46,8 +46,7 @@ internal record MemberTemplate(int Level, Interpolation? Interpolation = null, s
         }
         else if (e is LiteralExpressionSyntax l)
         {
-            var s0 = semantics.GetConstantValue(l);
-            if (s0.HasValue && s0.Value is string s) return new(level, Constant: s);
+            return new(level, Constant: l.Token.ValueText);
         }
 
         //todo: error
