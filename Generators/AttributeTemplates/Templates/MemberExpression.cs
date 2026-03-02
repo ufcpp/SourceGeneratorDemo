@@ -1,9 +1,10 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text;
 
 namespace Generators.AttributeTemplates.Templates;
 
-internal class MemberExpression
+internal abstract class MemberExpression
 {
     public static MemberExpression Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
     {
@@ -45,14 +46,26 @@ internal class MemberExpression
         return null!; // todo: error
     }
 
-    public class Parameter : MemberExpression
-    {
-        public required string Name { get; init; }
-    }
+    public abstract object? Evaluate(IExpressionEvaluationContext context);
 
     public class Constant : MemberExpression
     {
         public required object? Value { get; init; }
+
+        public override object? Evaluate(IExpressionEvaluationContext context)
+        {
+            return Value;
+        }
+    }
+
+    public class Parameter : MemberExpression
+    {
+        public required string Name { get; init; }
+
+        public override object? Evaluate(IExpressionEvaluationContext context)
+        {
+            return context[Name];
+        }
     }
 
     public class IntrinsicExpression : MemberExpression
@@ -60,11 +73,47 @@ internal class MemberExpression
         public required int Level { get; init; }
         public int? ParameterIndex { get; init; }
         public required string Kind { get; init; }
+
+        public override object? Evaluate(IExpressionEvaluationContext context)
+        {
+            if (context.TryGetIntrinsicValue(Kind, Level, ParameterIndex, out var iv))
+                return iv;
+
+            return null; // else error?
+        }
     }
 
     public class InterpolatedString : MemberExpression
     {
         public required Content[] Contents { get; init; }
+
+        public override object? Evaluate(IExpressionEvaluationContext context)
+        {
+            var s = new StringBuilder();
+            foreach (var c in Contents)
+            {
+                if (c is StringText text)
+                {
+                    s.Append(text.Text);
+                }
+                else if (c is Interpolation interpolation)
+                {
+                    var value = interpolation.Expression.Evaluate(context);
+
+                    var formatString = (interpolation.Alignment, interpolation.Format) switch
+                    {
+                        ({ } x, null) => $"{{0,{x}}}",
+                        (null, { } x) => $"{{0:{x}}}",
+                        ({ } x, { } y) => $"{{0,{x}:{y}}}",
+                        _ => "{0}",
+                    };
+
+                    s.AppendFormat(context.Culture, formatString, value);
+                }
+            }
+            return s.ToString();
+        }
+
 
         public static InterpolatedString Create(SemanticModel semantics, InterpolatedStringExpressionSyntax i, ParameterList parameters)
         {

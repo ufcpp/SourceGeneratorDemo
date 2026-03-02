@@ -39,7 +39,7 @@ internal static class Generator
 
                 foreach (var mt in template.Templates)
                 {
-                    var c = ExpressionEvaluator.Evaluate(mt.Expression, target.Member, map);
+                    var c = mt.Expression.Evaluate(new ExpressionEvaluationContext(target.Member, map));
                     var i = target.Member.GetIndex(mt.Level);
                     contents[i] += c + @"
 ";
