@@ -15,7 +15,7 @@ internal static class Generator
         var contents = Apply(target, templates);
         foreach (var (node, code) in target.Member.Zip(contents, (x, y) => (x, y)).Reverse())
         {
-            MemberFormatter.AppendDeclarationLine(s, node);
+            node.AppendDeclarationLine(s);
             s.Append(code);
         }
 

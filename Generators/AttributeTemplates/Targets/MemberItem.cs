@@ -1,20 +1,46 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text;
 
 namespace Generators.AttributeTemplates.Targets;
 
 internal abstract class MemberItem
 {
+    public abstract void AppendDeclarationLine(StringBuilder s);
+
+    protected const string BodyBraceStart = """
+ {
+
+""";
+
+    protected static void AppendModifiers(StringBuilder s, string[] modifiers)
+    {
+        foreach (var token in modifiers)
+        {
+            s.Append(token);
+            s.Append(' ');
+        }
+    }
+
     public static readonly Root RootInstance = new();
 
-    internal class Root : MemberItem;
+    internal class Root : MemberItem
+    {
+        public override void AppendDeclarationLine(StringBuilder s) { }
+    }
 
     internal abstract class NamedMember : MemberItem
     {
         public required string Name { get; init; }
     }
-    internal class Namespace : NamedMember;
+    internal class Namespace : NamedMember
+    {
+        public override void AppendDeclarationLine(StringBuilder s)
+        {
+            s.Append($"namespace {Name}{BodyBraceStart}");
+        }
+    }
 
     internal abstract class ModifierMember: NamedMember
     {
@@ -24,6 +50,11 @@ internal abstract class MemberItem
     internal class TypeDeclaration : ModifierMember
     {
         public required string Keyword { get; init; }
+        public override void AppendDeclarationLine(StringBuilder s)
+        {
+            AppendModifiers(s, Modifiers);
+            s.Append($"{Keyword} {Name}{BodyBraceStart}");
+        }
     }
 
     internal abstract class TypedMember : ModifierMember
@@ -31,11 +62,37 @@ internal abstract class MemberItem
         public required string Type { get; init; }
     }
 
-    internal class Property : TypedMember;
+    internal class Property : TypedMember
+    {
+        public override void AppendDeclarationLine(StringBuilder s)
+        {
+            AppendModifiers(s, Modifiers);
+            s.Append($"{Type} {Name}{BodyBraceStart}");
+        }
+    }
 
     internal class Method : TypedMember
     {
         public required Parameter[] Parameters { get; init; }
+
+        public override void AppendDeclarationLine(StringBuilder s)
+        {
+            AppendModifiers(s, Modifiers);
+            s.Append($$"""
+                        {{Type}} {{Name}}(
+                        """);
+
+            var first = true;
+            foreach (var mp in Parameters)
+            {
+                if (first) first = false;
+                else s.Append(", ");
+                s.Append($"{mp.Type} {mp.Name}");
+            }
+
+            s.Append(")");
+            s.Append(BodyBraceStart);
+        }
     }
 
     internal record Parameter(string Name, string Type);
