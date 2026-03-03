@@ -545,6 +545,25 @@ partial void Z(int z) {
 ]);
     }
 
+    [Fact]
+    public void Cast() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+$"// {(byte)'c'}, {(System.UInt16)123}, {(decimal)1.2}, {(Char)0x61}"
+);
+
+[A]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 99, 123, 1.2, a
+}
+
+"""),
+]);
+
 #if false
     [Fact]
     public void X() => Run(""""

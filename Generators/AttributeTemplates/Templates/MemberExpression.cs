@@ -42,6 +42,12 @@ internal abstract class MemberExpression
         {
             return InterpolatedString.Create(semantics, interpolatedString, parameters);
         }
+        else if (e is CastExpressionSyntax cast)
+        {
+            var innerExpr = Create(semantics, cast.Expression, parameters);
+            var targetType = Variant.GetLiteralKind(cast.Type.ToString());
+            return new CastExpression { Expression = innerExpr, TargetType = targetType };
+        }
 
         return null!; // todo: error
     }
@@ -81,6 +87,19 @@ internal abstract class MemberExpression
                 return Variant.FromObject(iv); //todo: TryFromObject
 
             return default; // else error?
+        }
+    }
+
+    public class CastExpression : MemberExpression
+    {
+        public required MemberExpression Expression { get; init; }
+        public required LiteralKind TargetType { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var value = Expression.Evaluate(context);
+            var targetKind = TargetType;
+            return value.Cast(targetKind);
         }
     }
 
