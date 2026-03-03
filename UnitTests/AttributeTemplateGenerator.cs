@@ -117,7 +117,7 @@ partial class Z {
 using AttributeTemplateGenerator;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-internal class AAttribute : TemplateAttribute(
+internal class AAttribute() : TemplateAttribute(
 $"""
 // A
 """);
@@ -150,7 +150,7 @@ partial class Class1 {
 
     [Fact]
     public void Literal() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 "// \x61\u0061\U0000061\"",
 @"// 1""",
 """
@@ -179,7 +179,7 @@ partial class Class1 {
 
     [Fact]
     public void ConstInterpolation() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute($"// {1}{'2'}{"34"}");
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"// {1}{'2'}{"34"}");
 
 [A]
 partial class Class1;
@@ -278,7 +278,7 @@ namespace A1
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-internal class AAttribute : TemplateAttribute(
+internal class AAttribute() : TemplateAttribute(
 "get { return 0; }",
 Parent("// Parent"),
 Up(0, "// Up 0"),
@@ -316,7 +316,7 @@ get { return 0; }
 
     [Fact]
     public void NameIntrinsic() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {Name}"
 );
 
@@ -358,7 +358,7 @@ public partial int P {
 
     [Fact]
     public void TypeIntrinsic() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {Type}"
 );
 
@@ -418,7 +418,7 @@ namespace A1
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-internal class AAttribute : TemplateAttribute(
+internal class AAttribute() : TemplateAttribute(
 $"// {Name} {Parent(Name)} {Up(1,Name)} {Down(1, Name)}"
 );
 
@@ -505,6 +505,41 @@ public partial double M(int a, float b) {
 // (     int/a       )
 return 34 * a * b;
 }}
+
+"""),
+]);
+    }
+
+    [Fact]
+    public void PrimaryConstructorParameter()
+    {
+        Run(
+"""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"""
+// {Up(1, Param(0, Type))}/{Up(1, Param(0, Name))}
+// {Parent(Param(0, Type))}/{Parent(Param(0, Name))}
+// {Param(0, Type)}/{Param(0, Name)}
+"""
+);
+
+partial class X(bool x)
+{
+    partial class Y(string y)
+    {
+        [A]
+        partial void Z(int z);
+    }
+}
+
+""""", [
+new("ATG_X.Y.Z(int)", """
+partial class X {
+partial class Y {
+partial void Z(int z) {
+// bool/x
+// string/y
+// int/z
+}}}
 
 """),
 ]);

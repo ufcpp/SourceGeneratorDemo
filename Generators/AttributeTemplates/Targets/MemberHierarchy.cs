@@ -49,7 +49,7 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
                 // combination with level? (primary constructor parameters?)
                 // {Parent(Type),a}
 
-                value = (member as Method)?.Parameters[a].Type;
+                value = (member as IHasParameters)?.Parameters?[a].Type;
             }
             else // {Type}, {Parent(Type)}, {Up(level, Type)}, etc.
             {
@@ -61,7 +61,7 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
         {
             if (parameterIndex is { } a) // {Name,a}
             {
-                value = (member as Method)?.Parameters[a].Name;
+                value = (member as IHasParameters)?.Parameters?[a].Name;
             }
             else // {Name}, {Parent(Name)}, {Up(level, Name)}, etc.
             {

@@ -47,9 +47,16 @@ internal abstract class MemberItem
         public required string[] Modifiers { get; init; }
     }
 
-    internal class TypeDeclaration : ModifierMember
+    internal interface IHasParameters
+    {
+        public Parameter[]? Parameters { get; }
+    }
+
+    internal class TypeDeclaration : ModifierMember, IHasParameters
     {
         public required string Keyword { get; init; }
+        public Parameter[]? Parameters { get; init; }
+
         public override void AppendDeclarationLine(StringBuilder s)
         {
             AppendModifiers(s, Modifiers);
@@ -71,7 +78,7 @@ internal abstract class MemberItem
         }
     }
 
-    internal class Method : TypedMember
+    internal class Method : TypedMember, IHasParameters
     {
         public required Parameter[] Parameters { get; init; }
 
@@ -117,6 +124,7 @@ internal abstract class MemberItem
             Name = t.Identifier.ValueText,
             Modifiers = GetModifiers(t.Modifiers),
             Keyword = GetKeyword(t),
+            Parameters = GetParameters(t)
         },
         NamespaceDeclarationSyntax n => new Namespace
         {
@@ -129,6 +137,12 @@ internal abstract class MemberItem
     private static Parameter[] GetParameters(MethodDeclarationSyntax m)
     {
         return [.. m.ParameterList.Parameters.Select(p => new Parameter(p.Identifier.ValueText, p.Type!.ToString()))];
+    }
+
+    private static Parameter[]? GetParameters(TypeDeclarationSyntax t)
+    {
+        if (t.ParameterList is null) return null;
+        return [.. t.ParameterList.Parameters.Select(p => new Parameter(p.Identifier.ValueText, p.Type!.ToString()))];
     }
 
     private static string[] GetModifiers(SyntaxTokenList modifiers) => [.. modifiers.Select(m => m.ValueText)];
