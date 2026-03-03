@@ -564,6 +564,52 @@ partial class Class1 {
 """),
 ]);
 
+    [Fact]
+    public void ArithmeticOperators() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+$"// {(byte)('a' + 2)}, {(System.UInt16)(100 + 30 - 7)}, {-(decimal)-1.2}, {(Char)(0x60 + (10 / 5 - 1))}"
+);
+
+[A]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 99, 123, 1.2, a
+}
+
+"""),
+]);
+
+    [Fact]
+    public void StringPlus() => Run(""""
+class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+$"// {"a" + 1.2}{'b' + "c"}",
+Parent("//" + 1.2)
+);
+
+[A]
+[A(CultureName = "de")]
+[A(CultureName = "fr")]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+//1.2
+//1,2
+//1,2
+partial class Class1 {
+// a1.2bc
+// a1,2bc
+// a1,2bc
+}
+
+"""),
+]);
+
 #if false
     [Fact]
     public void X() => Run(""""

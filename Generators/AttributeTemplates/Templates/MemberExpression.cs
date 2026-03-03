@@ -4,6 +4,21 @@ using System.Text;
 
 namespace Generators.AttributeTemplates.Templates;
 
+internal enum UnaryOperator
+{
+    Plus,
+    Minus
+}
+
+internal enum BinaryOperator
+{
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo
+}
+
 internal abstract class MemberExpression
 {
     public static MemberExpression Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
@@ -47,6 +62,36 @@ internal abstract class MemberExpression
             var innerExpr = Create(semantics, cast.Expression, parameters);
             var targetType = Variant.GetLiteralKind(cast.Type.ToString());
             return new CastExpression { Expression = innerExpr, TargetType = targetType };
+        }
+        else if (e is PrefixUnaryExpressionSyntax unary)
+        {
+            var operand = Create(semantics, unary.Operand, parameters);
+            var op = unary.Kind() switch
+            {
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.UnaryPlusExpression => UnaryOperator.Plus,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.UnaryMinusExpression => UnaryOperator.Minus,
+                _ => throw new InvalidOperationException($"Unsupported unary operator: {unary.Kind()}")
+            };
+            return new UnaryExpression { Operand = operand, Operator = op };
+        }
+        else if (e is BinaryExpressionSyntax binary)
+        {
+            var left = Create(semantics, binary.Left, parameters);
+            var right = Create(semantics, binary.Right, parameters);
+            var op = binary.Kind() switch
+            {
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.AddExpression => BinaryOperator.Add,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.SubtractExpression => BinaryOperator.Subtract,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.MultiplyExpression => BinaryOperator.Multiply,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.DivideExpression => BinaryOperator.Divide,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.ModuloExpression => BinaryOperator.Modulo,
+                _ => throw new InvalidOperationException($"Unsupported binary operator: {binary.Kind()}")
+            };
+            return new BinaryExpression { Left = left, Right = right, Operator = op };
+        }
+        else if (e is ParenthesizedExpressionSyntax parenthesized)
+        {
+            return Create(semantics, parenthesized.Expression, parameters);
         }
 
         return null!; // todo: error
@@ -98,8 +143,50 @@ internal abstract class MemberExpression
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
             var value = Expression.Evaluate(context);
-            var targetKind = TargetType;
-            return value.Cast(targetKind);
+            return value.Cast(TargetType);
+        }
+    }
+
+    public class UnaryExpression : MemberExpression
+    {
+        public required MemberExpression Operand { get; init; }
+        public required UnaryOperator Operator { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var operand = Operand.Evaluate(context);
+            return Operator switch
+            {
+                UnaryOperator.Plus => +operand,
+                UnaryOperator.Minus => -operand,
+                _ => throw new InvalidOperationException($"Unknown unary operator: {Operator}")
+            };
+        }
+    }
+
+    public class BinaryExpression : MemberExpression
+    {
+        public required MemberExpression Left { get; init; }
+        public required MemberExpression Right { get; init; }
+        public required BinaryOperator Operator { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var left = Left.Evaluate(context);
+            var right = Right.Evaluate(context);
+
+            if (left.Kind == LiteralKind.String) return new(left._string + right.ToString(null, context.Culture));
+            if (right.Kind == LiteralKind.String) return new(left.ToString(null, context.Culture) + right._string);
+
+            return Operator switch
+            {
+                BinaryOperator.Add => left + right,
+                BinaryOperator.Subtract => left - right,
+                BinaryOperator.Multiply => left * right,
+                BinaryOperator.Divide => left / right,
+                BinaryOperator.Modulo => left % right,
+                _ => throw new InvalidOperationException($"Unknown binary operator: {Operator}")
+            };
         }
     }
 

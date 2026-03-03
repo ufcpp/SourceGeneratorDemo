@@ -10,22 +10,22 @@ namespace Generators.AttributeTemplates;
 internal readonly struct Variant : IFormattable
 {
     // Reference type stored separately
-    [FieldOffset(0)] private readonly string? _string;
+    [FieldOffset(0)] internal readonly string? _string;
 
     // Numeric values share the same memory location (union-like)
-    [FieldOffset(8)] private readonly bool _bool;
-    [FieldOffset(8)] private readonly char _char;
-    [FieldOffset(8)] private readonly sbyte _sbyte;
-    [FieldOffset(8)] private readonly byte _byte;
-    [FieldOffset(8)] private readonly short _short;
-    [FieldOffset(8)] private readonly ushort _ushort;
-    [FieldOffset(8)] private readonly int _int32;
-    [FieldOffset(8)] private readonly uint _uint32;
-    [FieldOffset(8)] private readonly long _int64;
-    [FieldOffset(8)] private readonly ulong _uint64;
-    [FieldOffset(8)] private readonly float _single;
-    [FieldOffset(8)] private readonly double _double;
-    [FieldOffset(8)] private readonly decimal _decimal;
+    [FieldOffset(8)] internal readonly bool _bool;
+    [FieldOffset(8)] internal readonly char _char;
+    [FieldOffset(8)] internal readonly sbyte _sbyte;
+    [FieldOffset(8)] internal readonly byte _byte;
+    [FieldOffset(8)] internal readonly short _short;
+    [FieldOffset(8)] internal readonly ushort _ushort;
+    [FieldOffset(8)] internal readonly int _int32;
+    [FieldOffset(8)] internal readonly uint _uint32;
+    [FieldOffset(8)] internal readonly long _int64;
+    [FieldOffset(8)] internal readonly ulong _uint64;
+    [FieldOffset(8)] internal readonly float _single;
+    [FieldOffset(8)] internal readonly double _double;
+    [FieldOffset(8)] internal readonly decimal _decimal;
 
     // sizeof(decimal) is 16 bytes, so we can store the kind after it.
     [FieldOffset(8 + 16)] private readonly LiteralKind _kind;
@@ -299,6 +299,187 @@ internal readonly struct Variant : IFormattable
         "char" or "Char" or "System.Char" => LiteralKind.Char,
         "string" or "String" or "System.String" => LiteralKind.String,
         _ => throw new ArgumentException($"Unsupported type name: {typeName}", nameof(typeName))
+    };
+
+    // Unary operators
+    public static Variant operator +(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => new((int)value._sbyte),
+        LiteralKind.Byte => new((int)value._byte),
+        LiteralKind.Int16 => new((int)value._short),
+        LiteralKind.UInt16 => new((int)value._ushort),
+        LiteralKind.Int32 => value,
+        LiteralKind.UInt32 => value,
+        LiteralKind.Int64 => value,
+        LiteralKind.UInt64 => value,
+        LiteralKind.Single => value,
+        LiteralKind.Double => value,
+        LiteralKind.Decimal => value,
+        _ => throw new InvalidOperationException($"Unary plus operator not supported for {value._kind}")
+    };
+
+    public static Variant operator -(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => new(-(int)value._sbyte),
+        LiteralKind.Byte => new(-(int)value._byte),
+        LiteralKind.Int16 => new(-(int)value._short),
+        LiteralKind.UInt16 => new(-(int)value._ushort),
+        LiteralKind.Int32 => new(-value._int32),
+        LiteralKind.Int64 => new(-value._int64),
+        LiteralKind.Single => new(-value._single),
+        LiteralKind.Double => new(-value._double),
+        LiteralKind.Decimal => new(-value._decimal),
+        _ => throw new InvalidOperationException($"Unary minus operator not supported for {value._kind}")
+    };
+
+    // Binary operators
+    public static Variant operator +(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left + (decimal)right),
+        (LiteralKind.Double, _) or (_, LiteralKind.Double) => new((double)left + (double)right),
+        (LiteralKind.Single, _) or (_, LiteralKind.Single) => new((float)left + (float)right),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 + right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left + (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left + (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 + right._uint32),
+        _ => new((int)left + (int)right)
+    };
+
+    public static Variant operator -(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left - (decimal)right),
+        (LiteralKind.Double, _) or (_, LiteralKind.Double) => new((double)left - (double)right),
+        (LiteralKind.Single, _) or (_, LiteralKind.Single) => new((float)left - (float)right),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 - right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left - (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left - (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 - right._uint32),
+        _ => new((int)left - (int)right)
+    };
+
+    public static Variant operator *(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left * (decimal)right),
+        (LiteralKind.Double, _) or (_, LiteralKind.Double) => new((double)left * (double)right),
+        (LiteralKind.Single, _) or (_, LiteralKind.Single) => new((float)left * (float)right),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 * right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left * (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left * (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 * right._uint32),
+        _ => new((int)left * (int)right)
+    };
+
+    public static Variant operator /(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left / (decimal)right),
+        (LiteralKind.Double, _) or (_, LiteralKind.Double) => new((double)left / (double)right),
+        (LiteralKind.Single, _) or (_, LiteralKind.Single) => new((float)left / (float)right),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 / right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left / (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left / (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 / right._uint32),
+        _ => new((int)left / (int)right)
+    };
+
+    public static Variant operator %(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left % (decimal)right),
+        (LiteralKind.Double, _) or (_, LiteralKind.Double) => new((double)left % (double)right),
+        (LiteralKind.Single, _) or (_, LiteralKind.Single) => new((float)left % (float)right),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 % right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left % (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left % (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 % right._uint32),
+        _ => new((int)left % (int)right)
+    };
+
+    public static explicit operator int(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => value._sbyte,
+        LiteralKind.Byte => value._byte,
+        LiteralKind.Int16 => value._short,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.Int32 => value._int32,
+        LiteralKind.Char => value._char,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Int32")
+    };
+
+    public static explicit operator uint(Variant value) => value._kind switch
+    {
+        LiteralKind.Byte => value._byte,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.Char => value._char,
+        _ => (uint)(int)value
+    };
+
+    public static explicit operator long(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => value._sbyte,
+        LiteralKind.Byte => value._byte,
+        LiteralKind.Int16 => value._short,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.Int32 => value._int32,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.Int64 => value._int64,
+        LiteralKind.Char => value._char,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Int64")
+    };
+
+    public static explicit operator ulong(Variant value) => value._kind switch
+    {
+        LiteralKind.Byte => value._byte,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.UInt64 => value._uint64,
+        LiteralKind.Char => value._char,
+        _ => (ulong)(long)value
+    };
+
+    public static explicit operator float(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => value._sbyte,
+        LiteralKind.Byte => value._byte,
+        LiteralKind.Int16 => value._short,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.Int32 => value._int32,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.Int64 => value._int64,
+        LiteralKind.UInt64 => value._uint64,
+        LiteralKind.Single => value._single,
+        LiteralKind.Char => value._char,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Single")
+    };
+
+    public static explicit operator double(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => value._sbyte,
+        LiteralKind.Byte => value._byte,
+        LiteralKind.Int16 => value._short,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.Int32 => value._int32,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.Int64 => value._int64,
+        LiteralKind.UInt64 => value._uint64,
+        LiteralKind.Single => value._single,
+        LiteralKind.Double => value._double,
+        LiteralKind.Char => value._char,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Double")
+    };
+
+    public static explicit operator decimal(Variant value) => value._kind switch
+    {
+        LiteralKind.SByte => value._sbyte,
+        LiteralKind.Byte => value._byte,
+        LiteralKind.Int16 => value._short,
+        LiteralKind.UInt16 => value._ushort,
+        LiteralKind.Int32 => value._int32,
+        LiteralKind.UInt32 => value._uint32,
+        LiteralKind.Int64 => value._int64,
+        LiteralKind.UInt64 => value._uint64,
+        LiteralKind.Decimal => value._decimal,
+        LiteralKind.Char => value._char,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Decimal")
     };
 }
 
