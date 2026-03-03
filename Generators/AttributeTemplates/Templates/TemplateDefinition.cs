@@ -9,7 +9,7 @@ internal record TemplateDefinition(string AttributeId, ParameterList Params, IEn
     {
         if (node.BaseList is not { } b) return default;
 
-        var parameters = new ParameterList(node.ParameterList);
+        var parameters = new ParameterList(semantics, node.ParameterList);
 
         try
         {

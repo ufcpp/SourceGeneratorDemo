@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Templates;
@@ -7,7 +8,7 @@ internal readonly struct ParameterList
     private readonly (string name, string type)[]? _parameters;
     private readonly Dictionary<string, int>? _table;
 
-    public ParameterList(ParameterListSyntax? list)
+    public ParameterList(SemanticModel semantics, ParameterListSyntax? list)
     {
         if (list is null)
         {
@@ -22,15 +23,31 @@ internal readonly struct ParameterList
 
         foreach (var p in list.Parameters)
         {
-            if (p.Type is not PredefinedTypeSyntax pd)
-            {
-                //todo: support when p.Type is a generic parameter type
+            string typeName;
 
-                continue; // todo: error
+            if (p.Type is PredefinedTypeSyntax pd)
+            {
+                typeName = pd.Keyword.ValueText;
+            }
+            else
+            {
+                // A generic parameter needs semantics.
+                if (p.Type is null)
+                {
+                    throw AttributeTemplateException.UnknownError(p.GetLocation());
+                }
+
+                var typeInfo = semantics.GetTypeInfo(p.Type);
+                if (typeInfo.Type is not ITypeSymbol typeSymbol)
+                {
+                    throw AttributeTemplateException.UnknownError(p.GetLocation());
+                }
+
+                typeName = typeSymbol.ToDisplayString();
             }
 
             d.Add(p.Identifier.ValueText, i);
-            parameters[i++] = (p.Identifier.ValueText, pd.Keyword.ValueText);
+            parameters[i++] = (p.Identifier.ValueText, typeName);
         }
 
         _parameters = parameters;

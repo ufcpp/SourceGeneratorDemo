@@ -708,6 +708,25 @@ $"""{""[&x]}"""
 """", [], ["ATG001"]);
     }
 
+    [Fact]
+    public void GenericAttribute() => Run(""""
+class AAttribute<T>(T x) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {x}"
+);
+
+[A<int>(1)]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1
+}
+
+"""),
+]);
+
 #if false
     [Fact]
     public void X() => Run(""""

@@ -16,8 +16,18 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         "The expression '{0}' is not supported in template definitions",
         "AttributeTemplateGenerator",
         DiagnosticSeverity.Error,
-        true
-    );
+        true);
+
+    public static AttributeTemplateException UnknownError(Location location)
+        => new(Diagnostic.Create(_unknownError, location));
+
+    private static readonly DiagnosticDescriptor _unknownError = new(
+        "ATG999",
+        "Unknown error",
+        "An unknown error occurred during template processing",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
 }
 
 internal readonly struct Result<T> where T : class
