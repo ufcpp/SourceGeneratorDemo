@@ -301,7 +301,6 @@ internal readonly struct Variant : IFormattable
         _ => throw new ArgumentException($"Unsupported type name: {typeName}", nameof(typeName))
     };
 
-    // Unary operators
     public static Variant operator +(Variant value) => value._kind switch
     {
         LiteralKind.SByte => new((int)value._sbyte),
@@ -320,10 +319,10 @@ internal readonly struct Variant : IFormattable
 
     public static Variant operator -(Variant value) => value._kind switch
     {
-        LiteralKind.SByte => new(-(int)value._sbyte),
-        LiteralKind.Byte => new(-(int)value._byte),
-        LiteralKind.Int16 => new(-(int)value._short),
-        LiteralKind.UInt16 => new(-(int)value._ushort),
+        LiteralKind.SByte => new(-value._sbyte),
+        LiteralKind.Byte => new(-value._byte),
+        LiteralKind.Int16 => new(-value._short),
+        LiteralKind.UInt16 => new(-value._ushort),
         LiteralKind.Int32 => new(-value._int32),
         LiteralKind.Int64 => new(-value._int64),
         LiteralKind.Single => new(-value._single),
@@ -332,7 +331,18 @@ internal readonly struct Variant : IFormattable
         _ => throw new InvalidOperationException($"Unary minus operator not supported for {value._kind}")
     };
 
-    // Binary operators
+    public static Variant operator ~(Variant value) => value._kind switch
+    {
+        LiteralKind.Boolean => new(!value._bool),
+        LiteralKind.SByte => new(~value._sbyte),
+        LiteralKind.Byte => new(~value._byte),
+        LiteralKind.Int16 => new(~value._short),
+        LiteralKind.UInt16 => new(~value._ushort),
+        LiteralKind.Int32 => new(~value._int32),
+        LiteralKind.Int64 => new(~value._int64),
+        _ => throw new InvalidOperationException($"Unary not operator not supported for {value._kind}")
+    };
+
     public static Variant operator +(Variant left, Variant right) => (left._kind, right._kind) switch
     {
         (LiteralKind.Decimal, _) or (_, LiteralKind.Decimal) => new((decimal)left + (decimal)right),
@@ -391,6 +401,26 @@ internal readonly struct Variant : IFormattable
         (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left % (ulong)right),
         (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 % right._uint32),
         _ => new((int)left % (int)right)
+    };
+
+    public static Variant operator &(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Boolean, LiteralKind.Boolean) => new(left._bool & right._bool),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 & right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left & (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left & (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 & right._uint32),
+        _ => new((int)left & (int)right)
+    };
+
+    public static Variant operator |(Variant left, Variant right) => (left._kind, right._kind) switch
+    {
+        (LiteralKind.Boolean, LiteralKind.Boolean) => new(left._bool | right._bool),
+        (LiteralKind.UInt64, LiteralKind.UInt64) => new(left._uint64 | right._uint64),
+        (LiteralKind.Int64, _) or (_, LiteralKind.Int64) => new((long)left | (long)right),
+        (LiteralKind.UInt64, _) or (_, LiteralKind.UInt64) => new((ulong)left | (ulong)right),
+        (LiteralKind.UInt32, LiteralKind.UInt32) => new(left._uint32 | right._uint32),
+        _ => new((int)left | (int)right)
     };
 
     public static explicit operator int(Variant value) => value._kind switch

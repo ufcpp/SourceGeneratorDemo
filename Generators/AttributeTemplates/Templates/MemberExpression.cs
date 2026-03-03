@@ -7,7 +7,8 @@ namespace Generators.AttributeTemplates.Templates;
 internal enum UnaryOperator
 {
     Plus,
-    Minus
+    Minus,
+    Not, // both ! and ~
 }
 
 internal enum BinaryOperator
@@ -16,7 +17,9 @@ internal enum BinaryOperator
     Subtract,
     Multiply,
     Divide,
-    Modulo
+    Modulo,
+    And, // both & and &&, logical and bitwise
+    Or,
 }
 
 internal abstract class MemberExpression
@@ -70,6 +73,8 @@ internal abstract class MemberExpression
             {
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.UnaryPlusExpression => UnaryOperator.Plus,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.UnaryMinusExpression => UnaryOperator.Minus,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseNotExpression => UnaryOperator.Not,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalNotExpression => UnaryOperator.Not,
                 _ => throw new InvalidOperationException($"Unsupported unary operator: {unary.Kind()}")
             };
             return new UnaryExpression { Operand = operand, Operator = op };
@@ -85,6 +90,10 @@ internal abstract class MemberExpression
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.MultiplyExpression => BinaryOperator.Multiply,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.DivideExpression => BinaryOperator.Divide,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.ModuloExpression => BinaryOperator.Modulo,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseAndExpression => BinaryOperator.And,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalAndExpression => BinaryOperator.And,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseOrExpression => BinaryOperator.Or,
+                Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalOrExpression => BinaryOperator.Or,
                 _ => throw new InvalidOperationException($"Unsupported binary operator: {binary.Kind()}")
             };
             return new BinaryExpression { Left = left, Right = right, Operator = op };
@@ -159,6 +168,7 @@ internal abstract class MemberExpression
             {
                 UnaryOperator.Plus => +operand,
                 UnaryOperator.Minus => -operand,
+                UnaryOperator.Not => ~operand,
                 _ => throw new InvalidOperationException($"Unknown unary operator: {Operator}")
             };
         }
@@ -172,7 +182,7 @@ internal abstract class MemberExpression
 
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-            var left = Left.Evaluate(context);
+                var left = Left.Evaluate(context);
             var right = Right.Evaluate(context);
 
             if (left.Kind == LiteralKind.String) return new(left._string + right.ToString(null, context.Culture));
@@ -185,6 +195,8 @@ internal abstract class MemberExpression
                 BinaryOperator.Multiply => left * right,
                 BinaryOperator.Divide => left / right,
                 BinaryOperator.Modulo => left % right,
+                BinaryOperator.And => left & right,
+                BinaryOperator.Or => left | right,
                 _ => throw new InvalidOperationException($"Unknown binary operator: {Operator}")
             };
         }

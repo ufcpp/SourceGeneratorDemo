@@ -547,7 +547,7 @@ partial void Z(int z) {
 
     [Fact]
     public void Cast() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {(byte)'c'}, {(System.UInt16)123}, {(decimal)1.2}, {(Char)0x61}"
 );
 
@@ -566,7 +566,7 @@ partial class Class1 {
 
     [Fact]
     public void ArithmeticOperators() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {(byte)('a' + 2)}, {(System.UInt16)(100 + 30 - 7)}, {-(decimal)-1.2}, {(Char)(0x60 + (10 / 5 - 1))}"
 );
 
@@ -585,7 +585,7 @@ partial class Class1 {
 
     [Fact]
     public void StringPlus() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {"a" + 1.2}{'b' + "c"}",
 Parent("//" + 1.2)
 );
@@ -610,10 +610,35 @@ partial class Class1 {
 """),
 ]);
 
+    [Fact]
+    public void LogicalOperator() => Run(""""
+class AAttribute(bool a, bool b) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {a} {!a} {a & b} {a && b} {a | b} {a || b}"
+);
+
+[A(false, false)]
+[A(true, false)]
+[A(false, true)]
+[A(true, true)]
+partial class Class1;
+
+        
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// False True False False False False
+// True False False False True True
+// False True False False True True
+// True False True True True True
+}
+
+"""),
+]);
+
 #if false
     [Fact]
     public void X() => Run(""""
-class AAttribute : AttributeTemplateGenerator.TemplateAttribute(
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 );
 
 [A]
