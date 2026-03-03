@@ -52,14 +52,14 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     public const string Type = nameof(Type);
     public const string Name = nameof(Name);
 
-    public static (int level, int? parameterIndex, string kind) GetIntrinsicValue(SemanticModel semantics, ExpressionSyntax e)
+    public static (int level, int? parameterIndex, string? kind) GetIntrinsicValue(SemanticModel semantics, ExpressionSyntax e)
     {
         (var level, e) = GetLevelAndExpression(semantics, e);
 
         int? index = null;
         if (e is InvocationExpressionSyntax i)
         {
-            if (i.Expression is not IdentifierNameSyntax n) return default!; // todo: error
+            if (i.Expression is not IdentifierNameSyntax n) return default;
 
             // current syntax:
             //   Param(0, Type), Param(0, Name), ...
@@ -82,7 +82,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             if (name == Type || name == Name) return (level, index, name);
         }
 
-        return default!; //todo: error
+        return default;
     }
 
     public static (int level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
@@ -90,7 +90,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         int level = 0;
         if (e is InvocationExpressionSyntax i)
         {
-            if (i.Expression is not IdentifierNameSyntax n) return default!; // todo: error
+            if (i.Expression is not IdentifierNameSyntax n) return (0, e);
 
             var name = n.Identifier.ValueText;
             var args = i.ArgumentList.Arguments;

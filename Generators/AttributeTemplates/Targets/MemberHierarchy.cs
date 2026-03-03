@@ -44,14 +44,12 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
 
         if (id == Intrinsic.Type)
         {
-            if (parameterIndex is { } a) // {Type,a}
+            if (parameterIndex is { } a)
             {
-                // combination with level? (primary constructor parameters?)
-                // {Parent(Type),a}
 
                 value = (member as IHasParameters)?.Parameters?[a].Type;
             }
-            else // {Type}, {Parent(Type)}, {Up(level, Type)}, etc.
+            else
             {
                 value = (member as TypedMember)?.Type;
             }
@@ -59,11 +57,11 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
         }
         else if (id == Intrinsic.Name)
         {
-            if (parameterIndex is { } a) // {Name,a}
+            if (parameterIndex is { } a)
             {
                 value = (member as IHasParameters)?.Parameters?[a].Name;
             }
-            else // {Name}, {Parent(Name)}, {Up(level, Name)}, etc.
+            else
             {
                 value = (member as NamedMember)?.Name;
             }

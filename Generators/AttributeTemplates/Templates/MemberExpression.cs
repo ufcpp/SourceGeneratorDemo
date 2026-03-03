@@ -26,6 +26,13 @@ internal abstract class MemberExpression
 {
     public static MemberExpression Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
     {
+        var (level, parameterIndex, kind) = Intrinsic.GetIntrinsicValue(semantics, e);
+
+        if (kind is not null)
+        {
+            return new IntrinsicExpression { Level = level, ParameterIndex = parameterIndex, Kind = kind };
+        }
+
         if (e is LiteralExpressionSyntax literal)
         {
             return new Constant { Value = Variant.FromObject(literal.Token.Value) };
@@ -33,20 +40,10 @@ internal abstract class MemberExpression
         else if (e is IdentifierNameSyntax id)
         {
             var name = id.Identifier.ValueText;
-            if (name is Intrinsic.Name or Intrinsic.Type)
-            {
-                return new IntrinsicExpression { Level = 0, Kind = name };
-            }
-
             var v = semantics.GetConstantValue(id);
             if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
 
             return new Parameter { Name = name };
-        }
-        else if (e is InvocationExpressionSyntax inv)
-        {
-            var (level, parameterIndex, kind) = Intrinsic.GetIntrinsicValue(semantics, inv);
-            return new IntrinsicExpression { Level = level, ParameterIndex = parameterIndex, Kind = kind };
         }
         else if (e is MemberAccessExpressionSyntax ma)
         {
