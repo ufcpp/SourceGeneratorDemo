@@ -700,6 +700,12 @@ $"""{""[string.Empty]}"""
 );
 
 """", [], ["ATG001"]);
+        Run(""""
+class AAttribute(int x) : AttributeTemplateGenerator.TemplateAttribute(
+$"""{""[&x]}"""
+);
+
+"""", [], ["ATG001"]);
     }
 
 #if false

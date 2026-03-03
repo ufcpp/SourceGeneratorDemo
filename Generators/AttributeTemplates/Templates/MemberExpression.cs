@@ -73,7 +73,7 @@ internal abstract class MemberExpression
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.UnaryMinusExpression => UnaryOperator.Minus,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseNotExpression => UnaryOperator.Not,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalNotExpression => UnaryOperator.Not,
-                _ => throw new InvalidOperationException($"Unsupported unary operator: {unary.Kind()}")
+                var k => throw AttributeTemplateException.UnsupportedExpression(k, unary.GetLocation()),
             };
             return new UnaryExpression { Operand = operand, Operator = op };
         }
@@ -92,7 +92,7 @@ internal abstract class MemberExpression
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalAndExpression => BinaryOperator.And,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseOrExpression => BinaryOperator.Or,
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalOrExpression => BinaryOperator.Or,
-                _ => throw new InvalidOperationException($"Unsupported binary operator: {binary.Kind()}")
+                var k => throw AttributeTemplateException.UnsupportedExpression(k, binary.GetLocation()),
             };
             return new BinaryExpression { Left = left, Right = right, Operator = op };
         }
