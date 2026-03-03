@@ -131,7 +131,7 @@ internal abstract class MemberItem
             Name = n.Name.ToString()
         },
         CompilationUnitSyntax => RootInstance,
-        _ => null!, //todo: error? never reachable?
+        _ => throw AttributeTemplateException.Unreachable(member.GetLocation()),
     };
 
     private static Parameter[] GetParameters(MethodDeclarationSyntax m)
@@ -153,6 +153,6 @@ internal abstract class MemberItem
         SyntaxKind.StructDeclaration => "struct",
         SyntaxKind.RecordDeclaration => "record",
         SyntaxKind.RecordStructDeclaration => "record struct",
-        _ => "", //todo: error? never reachable?
+        _ => throw AttributeTemplateException.Unreachable(t.GetLocation()),
     };
 }
