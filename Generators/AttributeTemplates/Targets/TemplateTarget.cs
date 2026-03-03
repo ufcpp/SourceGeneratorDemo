@@ -25,14 +25,21 @@ internal record TemplateTarget(MemberHierarchy Member, ArgumentList[] Args)
 /// </summary>
 internal record TemporaryTemplateTarget(string MemberId, MemberDeclarationSyntax Member, ArgumentList[] Args)
 {
-    public static TemporaryTemplateTarget? Create(GeneratorSyntaxContext context)
+    public static Result<TemporaryTemplateTarget> Create(GeneratorSyntaxContext context)
     {
         var d = (MemberDeclarationSyntax)context.Node;
         var semantics = context.SemanticModel;
 
-        if (GetAttribute(d, semantics) is not { } args) return null;
+        try
+        {
+            if (GetAttribute(d, semantics) is not { } args) return default;
 
-        return new(semantics.GetUniqueId(d), d, [.. args]);
+            return new TemporaryTemplateTarget(semantics.GetUniqueId(d), d, [.. args]);
+        }
+        catch (AttributeTemplateException e)
+        {
+            return e.Diagnostic;
+        }
     }
 
     private static List<ArgumentList>? GetAttribute(MemberDeclarationSyntax d, SemanticModel semantics)

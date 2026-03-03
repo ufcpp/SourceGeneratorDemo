@@ -8,22 +8,17 @@ internal static class ApplicationProvider
 {
     public static void RegisterSourceOutput(
         this IncrementalGeneratorInitializationContext context,
-        IncrementalValuesProvider<Result<TemplateDefinition>> templateProvider,
+        IncrementalValuesProvider<TemplateDefinition> templateProvider,
         IncrementalValuesProvider<TemporaryTemplateTarget> memberProvider)
     {
-        context.RegisterSourceOutput(templateProvider
-            .Select((t, _) => t.Error!)
-            .Where(d => d != null),
-            (c, d) => c.ReportDiagnostic(d));
-
         context.RegisterSourceOutput(templateProvider.Combine(memberProvider));
     }
 
     public static IncrementalValuesProvider<GenerationInfo> Combine(
-        this IncrementalValuesProvider<Result<TemplateDefinition>> templateProvider,
+        this IncrementalValuesProvider<TemplateDefinition> templateProvider,
         IncrementalValuesProvider<TemporaryTemplateTarget> memberProvider)
     {
-        return memberProvider.Collect().Combine(templateProvider.Select((t, _) => t.Value!).Where(v => v is not null).Collect())
+        return memberProvider.Collect().Combine(templateProvider.Where(v => v is not null).Collect())
             .SelectMany((t, _) =>
             {
                 var templates = t.Right.ToDictionary(t => t.AttributeId);

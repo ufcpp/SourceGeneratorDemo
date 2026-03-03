@@ -5,8 +5,19 @@ namespace Generators.AttributeTemplates.Templates;
 
 internal static class TemplateProvider
 {
-    public static IncrementalValuesProvider<Result<TemplateDefinition>> CreateTemplateSyntaxProvider(this IncrementalGeneratorInitializationContext context)
-        => context.SyntaxProvider.CreateTemplateSyntaxProvider();
+    public static IncrementalValuesProvider<TemplateDefinition> CreateTemplateSyntaxProvider(this IncrementalGeneratorInitializationContext context)
+    {
+        var templates = context.SyntaxProvider.CreateTemplateSyntaxProvider();
+
+        context.RegisterSourceOutput(templates
+            .Select((t, _) => t.Error!)
+            .Where(e => e is not null),
+            (c, e) => c.ReportDiagnostic(e));
+
+        return templates
+            .Select((t, _) => t.Value!)
+            .Where(x => x is not null);
+    }
 
     public static IncrementalValuesProvider<Result<TemplateDefinition>> CreateTemplateSyntaxProvider(this SyntaxValueProvider syntaxProvider)
         => syntaxProvider.CreateSyntaxProvider(
