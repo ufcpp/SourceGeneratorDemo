@@ -5,15 +5,15 @@ namespace Generators.AttributeTemplates.Templates;
 
 internal static class TemplateProvider
 {
-    public static IncrementalValuesProvider<TemplateDefinition> CreateTemplateSyntaxProvider(this IncrementalGeneratorInitializationContext context)
+    public static IncrementalValuesProvider<Result<TemplateDefinition>> CreateTemplateSyntaxProvider(this IncrementalGeneratorInitializationContext context)
         => context.SyntaxProvider.CreateTemplateSyntaxProvider();
 
-    public static IncrementalValuesProvider<TemplateDefinition> CreateTemplateSyntaxProvider(this SyntaxValueProvider syntaxProvider)
+    public static IncrementalValuesProvider<Result<TemplateDefinition>> CreateTemplateSyntaxProvider(this SyntaxValueProvider syntaxProvider)
         => syntaxProvider.CreateSyntaxProvider(
             IsAttributeDeclaration,
             GetTemplateInfo
             )
-        .Where(t => t != null)!;
+        .Where(t => !t.IsNull)!;
 
     private static bool IsAttributeDeclaration(SyntaxNode node, CancellationToken token)
     {
@@ -21,7 +21,7 @@ internal static class TemplateProvider
             && c.Identifier.ValueText.EndsWith("Attribute");
     }
 
-    private static TemplateDefinition? GetTemplateInfo(GeneratorSyntaxContext context, CancellationToken token)
+    private static Result<TemplateDefinition> GetTemplateInfo(GeneratorSyntaxContext context, CancellationToken token)
         => TemplateDefinition.Create(context.SemanticModel, (ClassDeclarationSyntax)context.Node);
 
 }

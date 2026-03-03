@@ -13,6 +13,12 @@ public class AttributeTemplateGeneratorTests
         params GeneratedSource[] generatedSources)
         => Helpers.RunGenerator(_generator, targetSource, generatedSources);
 
+    private static void Run(
+        [StringSyntax("C#")] string targetSource,
+        GeneratedSource[] generatedSources,
+        string[] errorIds)
+        => Helpers.RunGenerator(_generator, targetSource, generatedSources, errorIds);
+
     [Fact]
     public void IgnoreUnrelatedAttribute() => Run(""""
 
@@ -678,6 +684,23 @@ partial class Class1 {
 
 """),
 ]);
+
+    [Fact]
+    public void UnsupportedExpression()
+    {
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"""{""[0]}"""
+);
+
+"""", [], ["ATG001"]);
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"""{""[string.Empty]}"""
+);
+
+"""", [], ["ATG001"]);
+    }
 
 #if false
     [Fact]

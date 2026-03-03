@@ -76,3 +76,9 @@ Down(1, "// comment"),
 Up(2, $"""
 // comment {Type} {Name}({Param(0, Type)} {Param(0, Name)}, {Param(1, Type)} {Param(1, Name)})
 """));
+
+#if false
+internal class AAttribute() : TemplateAttribute(
+    $"""{""[0]}"""
+    );
+#endif

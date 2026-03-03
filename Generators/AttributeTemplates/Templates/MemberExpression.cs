@@ -53,8 +53,6 @@ internal abstract class MemberExpression
             // currently only supports constant values in member access.
             var v = semantics.GetConstantValue(ma);
             if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
-
-            //todo: error?
         }
         else if (e is InterpolatedStringExpressionSyntax interpolatedString)
         {
@@ -110,7 +108,7 @@ internal abstract class MemberExpression
             return new ConditionalExpression { Condition = condition, WhenTrue = whenTrue, WhenFalse = whenFalse };
         }
 
-        return null!; // todo: error
+        throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
     }
 
     public abstract Variant Evaluate(IExpressionEvaluationContext context);
