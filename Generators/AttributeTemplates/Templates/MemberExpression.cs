@@ -10,7 +10,7 @@ internal abstract class MemberExpression
     {
         if (e is LiteralExpressionSyntax literal)
         {
-            return new Constant { Value = literal.Token.Value };
+            return new Constant { Value = Variant.FromObject(literal.Token.Value) };
         }
         else if (e is IdentifierNameSyntax id)
         {
@@ -21,7 +21,7 @@ internal abstract class MemberExpression
             }
 
             var v = semantics.GetConstantValue(id);
-            if (v.HasValue) return new Constant { Value = v.Value };
+            if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
 
             return new Parameter { Name = name };
         }
@@ -34,7 +34,7 @@ internal abstract class MemberExpression
         {
             // currently only supports constant values in member access.
             var v = semantics.GetConstantValue(ma);
-            if (v.HasValue) return new Constant { Value = v.Value };
+            if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
 
             //todo: error?
         }
@@ -46,13 +46,13 @@ internal abstract class MemberExpression
         return null!; // todo: error
     }
 
-    public abstract object? Evaluate(IExpressionEvaluationContext context);
+    public abstract Variant Evaluate(IExpressionEvaluationContext context);
 
     public class Constant : MemberExpression
     {
-        public required object? Value { get; init; }
+        public required Variant Value { get; init; }
 
-        public override object? Evaluate(IExpressionEvaluationContext context)
+        public override Variant Evaluate(IExpressionEvaluationContext context)
         {
             return Value;
         }
@@ -62,9 +62,10 @@ internal abstract class MemberExpression
     {
         public required string Name { get; init; }
 
-        public override object? Evaluate(IExpressionEvaluationContext context)
+        public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-            return context[Name];
+            return Variant.FromObject(context[Name]);
+            //todo: use TryFromObject and report an error
         }
     }
 
@@ -74,12 +75,12 @@ internal abstract class MemberExpression
         public int? ParameterIndex { get; init; }
         public required string Kind { get; init; }
 
-        public override object? Evaluate(IExpressionEvaluationContext context)
+        public override Variant Evaluate(IExpressionEvaluationContext context)
         {
             if (context.TryGetIntrinsicValue(Kind, Level, ParameterIndex, out var iv))
-                return iv;
+                return Variant.FromObject(iv); //todo: TryFromObject
 
-            return null; // else error?
+            return default; // else error?
         }
     }
 
@@ -87,7 +88,7 @@ internal abstract class MemberExpression
     {
         public required Content[] Contents { get; init; }
 
-        public override object? Evaluate(IExpressionEvaluationContext context)
+        public override Variant Evaluate(IExpressionEvaluationContext context)
         {
             var s = new StringBuilder();
             foreach (var c in Contents)
@@ -111,7 +112,7 @@ internal abstract class MemberExpression
                     s.AppendFormat(context.Culture, formatString, value);
                 }
             }
-            return s.ToString();
+            return new(s.ToString());
         }
 
 
