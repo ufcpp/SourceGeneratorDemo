@@ -28,6 +28,17 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         "AttributeTemplateGenerator",
         DiagnosticSeverity.Error,
         true);
+
+    public static AttributeTemplateException Unreachable(Location location)
+        => new(Diagnostic.Create(_unreachable, location));
+
+    private static readonly DiagnosticDescriptor _unreachable = new(
+        "ATG998",
+        "Unreachable code",
+        "Reached unreachable code. This should not happen with current C# syntax, but may occur if new language features are added.",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
 }
 
 internal readonly struct Result<T> where T : class

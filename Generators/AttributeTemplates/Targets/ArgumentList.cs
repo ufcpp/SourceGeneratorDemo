@@ -28,11 +28,10 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
         var count = 0;
         foreach (var arg in list.Arguments)
         {
-            if (arg.NameEquals is { } n)
+            if (arg.NameEquals is { } n && n.Name.Identifier.ValueText == "CultureName")
             {
-                //todo: ensure n.Name == "CultureName"
                 var v = semantics.GetConstantValue(arg.Expression);
-                //if (!v.HasValue || v.Value is not string) todo: error
+                if (!v.HasValue || v.Value is not string) throw AttributeTemplateException.Unreachable(arg.GetLocation());
                 culture = (string?)v.Value;
                 break;
             }
@@ -45,7 +44,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
         foreach (var arg in list.Arguments.Take(count))
         {
             var v = semantics.GetConstantValue(arg.Expression);
-            //if (!v.HasValue) todo: error
+            if (!v.HasValue) throw AttributeTemplateException.Unreachable(arg.GetLocation());
             values[i++] = v.Value;
         }
 
