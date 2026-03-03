@@ -102,6 +102,13 @@ internal abstract class MemberExpression
         {
             return Create(semantics, parenthesized.Expression, parameters);
         }
+        else if (e is ConditionalExpressionSyntax conditional)
+        {
+            var condition = Create(semantics, conditional.Condition, parameters);
+            var whenTrue = Create(semantics, conditional.WhenTrue, parameters);
+            var whenFalse = Create(semantics, conditional.WhenFalse, parameters);
+            return new ConditionalExpression { Condition = condition, WhenTrue = whenTrue, WhenFalse = whenFalse };
+        }
 
         return null!; // todo: error
     }
@@ -183,7 +190,7 @@ internal abstract class MemberExpression
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
                 var left = Left.Evaluate(context);
-            var right = Right.Evaluate(context);
+                    var right = Right.Evaluate(context);
 
             if (left.Kind == LiteralKind.String) return new(left._string + right.ToString(null, context.Culture));
             if (right.Kind == LiteralKind.String) return new(left.ToString(null, context.Culture) + right._string);
@@ -199,6 +206,19 @@ internal abstract class MemberExpression
                 BinaryOperator.Or => left | right,
                 _ => throw new InvalidOperationException($"Unknown binary operator: {Operator}")
             };
+        }
+    }
+
+    public class ConditionalExpression : MemberExpression
+    {
+        public required MemberExpression Condition { get; init; }
+        public required MemberExpression WhenTrue { get; init; }
+        public required MemberExpression WhenFalse { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var condition = Condition.Evaluate(context);
+            return (bool)condition ? WhenTrue.Evaluate(context) : WhenFalse.Evaluate(context);
         }
     }
 

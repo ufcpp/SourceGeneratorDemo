@@ -622,7 +622,7 @@ $"// {a} {!a} {a & b} {a && b} {a | b} {a || b}"
 [A(true, true)]
 partial class Class1;
 
-        
+
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -630,6 +630,50 @@ partial class Class1 {
 // True False False False True True
 // False True False False True True
 // True False True True True True
+}
+
+"""),
+]);
+
+    [Fact]
+    public void BitwiseOperator() => Run(""""
+class AAttribute(byte a, byte b) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {a} {~a} {a & b} {a | b}"
+);
+
+[A(1, 2)]
+[A(2, 5)]
+[A(7, 10)]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1 -2 0 3
+// 2 -3 0 7
+// 7 -8 2 15
+}
+
+"""),
+]);
+
+    [Fact]
+    public void ConditionalOperator() => Run(""""
+class AAttribute(bool condition, int a, int b) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {(condition ? a : b)}"
+);
+
+[A(true, 1, 2)]
+[A(false, 10, 20)]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1
+// 20
 }
 
 """),
@@ -644,7 +688,7 @@ class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 [A]
 partial class Class1;
 
-        
+
 """", [
 new("ATG_Class1","""
 partial class Class1 {

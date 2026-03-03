@@ -511,6 +511,12 @@ internal readonly struct Variant : IFormattable
         LiteralKind.Char => value._char,
         _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Decimal")
     };
+
+    public static explicit operator bool(Variant value) => value._kind switch
+    {
+        LiteralKind.Boolean => value._bool,
+        _ => throw new InvalidOperationException($"Cannot convert {value._kind} to Boolean")
+    };
 }
 
 internal enum LiteralKind : byte
