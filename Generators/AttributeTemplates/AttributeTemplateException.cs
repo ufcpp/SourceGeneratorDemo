@@ -18,6 +18,17 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         DiagnosticSeverity.Error,
         true);
 
+    public static AttributeTemplateException UnknownCultureName(string cultureName, Location location)
+        => new(Diagnostic.Create(_unknownCultureName, location, cultureName));
+
+    private static readonly DiagnosticDescriptor _unknownCultureName = new(
+        "ATG002",
+        "Unknown culture name",
+        "The culture name '{0}' is not recognized",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
     public static AttributeTemplateException UnknownError(Location location)
         => new(Diagnostic.Create(_unknownError, location));
 

@@ -58,12 +58,12 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
         try
         {
             var c = CultureInfo.GetCultureInfo(name);
-            if (c.LCID == 4096) return CultureInfo.InvariantCulture; // error?
+            if (c.LCID == 4096) throw AttributeTemplateException.UnknownCultureName(name, Location.None);
             else return c;
         }
         catch (CultureNotFoundException)
         {
-            return CultureInfo.InvariantCulture;
+            throw AttributeTemplateException.UnknownCultureName(name, Location.None);
         }
     }
 

@@ -727,6 +727,26 @@ partial class Class1 {
 """),
 ]);
 
+    [Fact]
+    public void UnknownCultureName()
+    {
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute();
+
+[A(CultureName = "non")]
+partial class Class1;
+
+"""", [], ["ATG002"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute();
+
+[A(CultureName = "awqsedrftgyh")]
+partial class Class1;
+
+"""", [], ["ATG002"]);
+    }
+
 #if false
     [Fact]
     public void X() => Run(""""
