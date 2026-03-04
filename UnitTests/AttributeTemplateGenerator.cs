@@ -690,12 +690,6 @@ partial class Class1 {
     {
         Run(""""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
-$"""{""[0]}"""
-);
-
-"""", [], ["ATG001"]);
-        Run(""""
-class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"""{""[string.Empty]}"""
 );
 
@@ -741,11 +735,70 @@ partial class Class1;
         Run(""""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute();
 
-[A(CultureName = "awqsedrftgyh")]
+[A(CultureName = "not-a-culture")]
 partial class Class1;
 
 """", [], ["ATG002"]);
     }
+
+    [Fact]
+    public void ArrayLiteral() => Run(""""
+class AAttribute(string[] arr) : AttributeTemplateGenerator.TemplateAttribute(
+$"{arr}"
+);
+
+[A(["//a", "//b", "//c"])]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+//a
+//b
+//c
+}
+
+"""),
+]);
+
+    [Fact]
+    public void ArrayIndex() => Run(""""
+class AAttribute(int[] arr) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {arr[0]}, {arr[1]}, {arr[2]}"
+);
+
+[A([1, 2, 3])]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1, 2, 3
+}
+
+"""),
+]);
+
+    [Fact]
+    public void StringIndexAccess() => Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {"abc"[0]}, {"xyz"[1]}, {"hello"[4]}"
+);
+
+[A]
+partial class Class1;
+
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// a, y, o
+}
+
+"""),
+]);
 
 #if false
     [Fact]

@@ -43,12 +43,46 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
 
         foreach (var arg in list.Arguments.Take(count))
         {
-            var v = semantics.GetConstantValue(arg.Expression);
-            if (!v.HasValue) throw AttributeTemplateException.Unreachable(arg.GetLocation());
-            values[i++] = v.Value;
+            values[i++] = GetArgumentValue(semantics, arg.Expression);
         }
 
         return new(id, values, culture);
+    }
+
+    private static object? GetArgumentValue(SemanticModel semantics, ExpressionSyntax expression)
+    {
+        // Handle collection expressions [1, 2, 3]
+        if (expression is CollectionExpressionSyntax collection)
+        {
+            var elements = collection.Elements
+                .OfType<ExpressionElementSyntax>()
+                .Select(elem => GetArgumentValue(semantics, elem.Expression))
+                .ToArray();
+            return elements;
+        }
+
+        // Handle implicit array creation new[] { 1, 2, 3 }
+        if (expression is ImplicitArrayCreationExpressionSyntax implicitArray)
+        {
+            var elements = implicitArray.Initializer.Expressions
+                .Select(expr => GetArgumentValue(semantics, expr))
+                .ToArray();
+            return elements;
+        }
+
+        // Handle explicit array creation new int[] { 1, 2, 3 }
+        if (expression is ArrayCreationExpressionSyntax arrayCreation && arrayCreation.Initializer is { } initializer)
+        {
+            var elements = initializer.Expressions
+                .Select(expr => GetArgumentValue(semantics, expr))
+                .ToArray();
+            return elements;
+        }
+
+        // Handle constant values
+        var v = semantics.GetConstantValue(expression);
+        if (!v.HasValue) throw AttributeTemplateException.Unreachable(expression.GetLocation());
+        return v.Value;
     }
 
     public static CultureInfo GetCultureInfo(string? culture)

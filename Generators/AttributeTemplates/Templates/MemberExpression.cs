@@ -24,6 +24,22 @@ internal enum BinaryOperator
 
 internal abstract class MemberExpression
 {
+    private static Variant? TryGetConstantValue(SemanticModel semantics, ExpressionSyntax e)
+    {
+        if (e is LiteralExpressionSyntax literal)
+        {
+            return Variant.FromObject(literal.Token.Value);
+        }
+        else if (e is MemberAccessExpressionSyntax ma)
+        {
+            // currently only supports constant values in member access.
+            var v = semantics.GetConstantValue(ma);
+            if (v.HasValue) return Variant.FromObject(v.Value);
+        }
+
+        return null;
+    }
+
     public static MemberExpression Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
     {
         var (level, parameterIndex, kind) = Intrinsic.GetIntrinsicValue(semantics, e);
@@ -33,23 +49,15 @@ internal abstract class MemberExpression
             return new IntrinsicExpression { Level = level, ParameterIndex = parameterIndex, Kind = kind };
         }
 
-        if (e is LiteralExpressionSyntax literal)
-        {
-            return new Constant { Value = Variant.FromObject(literal.Token.Value) };
-        }
-        else if (e is IdentifierNameSyntax id)
+        if (TryGetConstantValue(semantics, e) is { } cv) return new Constant { Value = cv };
+
+        if (e is IdentifierNameSyntax id)
         {
             var name = id.Identifier.ValueText;
             var v = semantics.GetConstantValue(id);
             if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
 
             return new Parameter { Name = name };
-        }
-        else if (e is MemberAccessExpressionSyntax ma)
-        {
-            // currently only supports constant values in member access.
-            var v = semantics.GetConstantValue(ma);
-            if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
         }
         else if (e is InterpolatedStringExpressionSyntax interpolatedString)
         {
@@ -103,6 +111,16 @@ internal abstract class MemberExpression
             var whenTrue = Create(semantics, conditional.WhenTrue, parameters);
             var whenFalse = Create(semantics, conditional.WhenFalse, parameters);
             return new ConditionalExpression { Condition = condition, WhenTrue = whenTrue, WhenFalse = whenFalse };
+        }
+        else if (e is ElementAccessExpressionSyntax elementAccess)
+        {
+            var arrayExpr = Create(semantics, elementAccess.Expression, parameters);
+            if (elementAccess.ArgumentList.Arguments.Count != 1)
+            {
+                throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
+            }
+            var indexExpr = Create(semantics, elementAccess.ArgumentList.Arguments[0].Expression, parameters);
+            return new ElementAccessExpression { Array = arrayExpr, Index = indexExpr };
         }
 
         throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
@@ -214,6 +232,54 @@ internal abstract class MemberExpression
         {
             var condition = Condition.Evaluate(context);
             return (bool)condition ? WhenTrue.Evaluate(context) : WhenFalse.Evaluate(context);
+        }
+    }
+
+    public class ElementAccessExpression : MemberExpression
+    {
+        public required MemberExpression Array { get; init; }
+        public required MemberExpression Index { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var array = Array.Evaluate(context);
+            var index = Index.Evaluate(context);
+
+            // String indexing
+            if (array.Kind == LiteralKind.String)
+            {
+                if (array._string is not { } str) // unreachable
+                {
+                    throw new InvalidOperationException("String is null");
+                }
+
+                var idx = (int)index;
+                if (idx < 0 || idx >= str.Length)
+                {
+                    throw new IndexOutOfRangeException($"Index {idx} is out of range for string of length {str.Length}");
+                }
+
+                return new Variant(str[idx]);
+            }
+
+            // Array indexing
+            if (array.Kind != LiteralKind.Array) // unreachable
+            {
+                throw new InvalidOperationException($"Cannot index non-array/string type: {array.Kind}");
+            }
+
+            if (array._array is not { } arr)
+            {
+                throw new InvalidOperationException("Array is null");
+            }
+
+            var index2 = (int)index;
+            if (index2 < 0 || index2 >= arr.Length)
+            {
+                throw new IndexOutOfRangeException($"Index {index2} is out of range for array of length {arr.Length}");
+            }
+
+            return arr[index2];
         }
     }
 

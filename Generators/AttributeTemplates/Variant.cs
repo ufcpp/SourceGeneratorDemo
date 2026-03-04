@@ -11,6 +11,7 @@ internal readonly struct Variant : IFormattable
 {
     // Reference type stored separately
     [FieldOffset(0)] internal readonly string? _string;
+    [FieldOffset(0)] internal readonly Variant[]? _array;
 
     // Numeric values share the same memory location (union-like)
     [FieldOffset(8)] internal readonly bool _bool;
@@ -48,6 +49,7 @@ internal readonly struct Variant : IFormattable
     public Variant(double value) : this(LiteralKind.Double) => _double = value;
     public Variant(decimal value) : this(LiteralKind.Decimal) => _decimal = value;
     public Variant(string value) : this(LiteralKind.String) => _string = value;
+    public Variant(Variant[] value) : this(LiteralKind.Array) => _array = value;
 
     public static Variant? TryFromObject(object? value) => value switch
     {
@@ -66,6 +68,7 @@ internal readonly struct Variant : IFormattable
         double d => new(d),
         decimal dec => new(dec),
         string s => new(s),
+        object[] arr => new([.. arr.Select(FromObject)]),
         _ => null
     };
 
@@ -90,6 +93,7 @@ internal readonly struct Variant : IFormattable
         LiteralKind.Double => _double,
         LiteralKind.Decimal => _decimal,
         LiteralKind.String => _string,
+        LiteralKind.Array => _array?.Select(v => v.ToObject()).ToArray(),
         _ => throw new InvalidOperationException($"Unknown literal kind: {_kind}")
     };
 
@@ -110,6 +114,8 @@ internal readonly struct Variant : IFormattable
         LiteralKind.Double => _double.ToString(format, formatProvider),
         LiteralKind.Decimal => _decimal.ToString(format, formatProvider),
         LiteralKind.String => _string ?? "",
+        LiteralKind.Array => string.Join(@"
+", _array?.Select(v => v.ToString(format, formatProvider)) ?? []),
         _ => "",
     };
 
@@ -536,4 +542,5 @@ internal enum LiteralKind : byte
     Double,
     Decimal,
     String,
+    Array,
 }

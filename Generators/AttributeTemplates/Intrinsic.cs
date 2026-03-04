@@ -25,7 +25,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     protected static string Global(string template) => template;
     protected static string Up(int level, string template) => template;
     protected static string Down(int level, string template) => template;
-    protected static ReadOnlySpan<(string Name, string Type> Param => default;
+    protected static ReadOnlySpan<(string Name, string Type)> Param => default;
     protected const string Type = "";
     protected const string Name = "";
     public string? CultureName { get; set; }
