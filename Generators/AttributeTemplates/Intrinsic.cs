@@ -85,59 +85,33 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     public static (int level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
     {
         int level = 0;
-        if (e is InvocationExpressionSyntax i)
+        if (e is InvocationExpressionSyntax { Expression: var ex, ArgumentList.Arguments: [var arg] })
         {
-            var name = i.Expression switch
+            if (ex is IdentifierNameSyntax id)
             {
-                IdentifierNameSyntax n => n.Identifier.ValueText,
-                ElementAccessExpressionSyntax ea when ea.Expression is IdentifierNameSyntax ean => ean.Identifier.ValueText,
-                _ => null
-            };
-
-            if (name is null) return (0, e);
-
-            var args = i.ArgumentList.Arguments;
-            if (name == Parent && args.Count == 1)
-            {
-                level = 1;
-                e = args[0].Expression;
+                if (id.Identifier.ValueText == Parent)
+                {
+                    // Parent($"...") pattern
+                    level = 1;
+                    e = arg.Expression;
+                }
+                else if (id.Identifier.ValueText == Global)
+                {
+                    // Global($"...") pattern
+                    level = -1;
+                    e = arg.Expression;
+                }
             }
-            else if (name == Global && args.Count == 1)
+            else if (ex is ElementAccessExpressionSyntax
             {
-                level = -1;
-                e = args[0].Expression;
-            }
-            else if (name == Ancestor && i.Expression is ElementAccessExpressionSyntax ancestorAccess && args.Count == 1)
+                Expression: IdentifierNameSyntax { Identifier.ValueText: Ancestor },
+                ArgumentList.Arguments: [var indexExpr]
+            } && IndexValue(indexExpr.Expression, semantics) is { } index)
             {
                 // Ancestor[n]($"...") pattern
-                if (ancestorAccess.ArgumentList.Arguments.Count != 1) return (0, e);
-
-                var indexExpr = ancestorAccess.ArgumentList.Arguments[0].Expression;
-                // Parse Index: either int literal or ^int
-                if (indexExpr is LiteralExpressionSyntax literal && literal.Token.Value is int value)
-                {
-                    // Ancestor[0]($"...") -> level = 0 (current member)
-                    // Ancestor[1]($"...") -> level = 1 (parent)
-                    // Ancestor[2]($"...") -> level = 2 (grandparent)
-                    level = value;
-                    e = args[0].Expression;
-                }
-                else if (indexExpr is PrefixUnaryExpressionSyntax { OperatorToken.ValueText: "^" } hat
-                    && hat.Operand is LiteralExpressionSyntax hatLiteral 
-                    && hatLiteral.Token.Value is int hatValue)
-                {
-                    // Ancestor[^0]($"...") -> level = -1 (Global)
-                    // Ancestor[^1]($"...") -> level = -2 (one level down from Global)
-                    // Ancestor[^2]($"...") -> level = -3 (two levels down from Global)
-                    level = -hatValue - 1;
-                    e = args[0].Expression;
-                }
-                else if (IntValue(indexExpr, semantics) is int constValue)
-                {
-                    // Constant expression
-                    level = constValue;
-                    e = args[0].Expression;
-                }
+                if (index.IsFromEnd) level = -index.Value - 1;
+                else level = index.Value;
+                e = arg.Expression;
             }
         }
 
@@ -154,5 +128,18 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         var v = semantics.GetConstantValue(ex);
         if (v.HasValue && v.Value is int i) return i;
         return null;
+    }
+
+    private static Index? IndexValue(ExpressionSyntax ex, SemanticModel semantics)
+    {
+        if (ex is PrefixUnaryExpressionSyntax
+            {
+                OperatorToken.ValueText: "^",
+                Operand: var operand
+            } && IntValue(operand, semantics) is int value)
+        {
+            return Index.FromEnd(value);
+        }
+        else return IntValue(ex, semantics);
     }
 }

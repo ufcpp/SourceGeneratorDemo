@@ -284,14 +284,19 @@ internal class AAttribute() : TemplateAttribute(
 "get { return 0; }",
 Parent("// Parent"),
 Ancestor[0]("// Ancestor 0"),
-Ancestor[1]("// Ancestor 1"),
+Ancestor[Constants.N]("// Ancestor 1"),
 Ancestor[2]("// Ancestor 2"),
 Ancestor[4]("// Ancestor 4"),
 Global("// Global"),
 Ancestor[^0]("// Ancestor ^0"),
-Ancestor[^1]("// Ancestor ^1"),
+Ancestor[^Constants.N]("// Ancestor ^1"),
 Ancestor[^3]("// Ancestor ^3")
 );
+
+static class Constants
+{
+    public const int N = 1;
+}
 
 """", [
 new("ATG_A1.A2.A3.C.S.R.RC.RS.P","""
