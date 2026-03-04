@@ -21,8 +21,7 @@ internal static class SymbolIdentifier
     public static string GetUniqueId(this SemanticModel semanticModel, MemberDeclarationSyntax member)
     {
         var symbol = semanticModel.GetDeclaredSymbol(member);
-        // if (symbol is null) todo: error;
-        return GetUniqueId(symbol!);
+        return symbol is not null ? GetUniqueId(symbol) : throw AttributeTemplateException.Unreachable(member.GetLocation());
     }
 
     /// <summary>
