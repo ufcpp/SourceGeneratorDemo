@@ -4,10 +4,10 @@ using System.Globalization;
 
 namespace Generators.AttributeTemplates.Targets;
 
-internal readonly struct ArgumentList(string attributeId, object?[]? values, string? culture)
+internal readonly struct ArgumentList(string attributeId, Variant[]? values, string? culture)
 {
     public string AttributeId { get; } = attributeId;
-    private readonly object?[]? _values = values;
+    private readonly Variant[]? _values = values;
     public IFormatProvider Culture { get; } = GetCultureInfo(culture);
 
     public static ArgumentList? Create(SemanticModel semantics, AttributeSyntax a)
@@ -38,7 +38,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
             ++count;
         }
 
-        var values = new object?[count];
+        var values = new Variant[count];
         var i = 0;
 
         foreach (var arg in list.Arguments.Take(count))
@@ -49,7 +49,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
         return new(id, values, culture);
     }
 
-    private static object? GetArgumentValue(SemanticModel semantics, ExpressionSyntax expression)
+    private static Variant GetArgumentValue(SemanticModel semantics, ExpressionSyntax expression)
     {
         // Handle collection expressions [1, 2, 3]
         if (expression is CollectionExpressionSyntax collection)
@@ -58,7 +58,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
                 .OfType<ExpressionElementSyntax>()
                 .Select(elem => GetArgumentValue(semantics, elem.Expression))
                 .ToArray();
-            return elements;
+            return new(elements);
         }
 
         // Handle implicit array creation new[] { 1, 2, 3 }
@@ -67,7 +67,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
             var elements = implicitArray.Initializer.Expressions
                 .Select(expr => GetArgumentValue(semantics, expr))
                 .ToArray();
-            return elements;
+            return new(elements);
         }
 
         // Handle explicit array creation new int[] { 1, 2, 3 }
@@ -76,13 +76,13 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
             var elements = initializer.Expressions
                 .Select(expr => GetArgumentValue(semantics, expr))
                 .ToArray();
-            return elements;
+            return new(elements);
         }
 
         // Handle constant values
         var v = semantics.GetConstantValue(expression);
         if (!v.HasValue) throw AttributeTemplateException.Unreachable(expression.GetLocation());
-        return v.Value;
+        return Variant.TryFromObject(v.Value) ?? throw AttributeTemplateException.Unreachable(expression.GetLocation());
     }
 
     public static CultureInfo GetCultureInfo(string? culture)
@@ -103,5 +103,5 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
 
 
     public int Count => _values?.Length ?? 0;
-    public object? this[int index] => _values![index];
+    public Variant this[int index] => _values![index];
 }
