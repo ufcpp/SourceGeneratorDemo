@@ -283,34 +283,36 @@ namespace A1
 internal class AAttribute() : TemplateAttribute(
 "get { return 0; }",
 Parent("// Parent"),
-Up(0, "// Up 0"),
-Up(1, "// Up 1"),
-Up(3, "// Up 3"),
+Ancestor(0, "// Ancestor 0"),
+Ancestor(1, "// Ancestor 1"),
+Ancestor(2, "// Ancestor 2"),
+Ancestor(4, "// Ancestor 4"),
 Global("// Global"),
-Down(0, "// Down 0"),
-Down(1, "// Down 1"),
-Down(3, "// Down 3")
+Ancestor(^0, "// Ancestor ^0"),
+Ancestor(^1, "// Ancestor ^1"),
+Ancestor(^3, "// Ancestor ^3")
 );
 
 """", [
 new("ATG_A1.A2.A3.C.S.R.RC.RS.P","""
 // Global
-// Down 0
+// Ancestor ^0
 namespace A1 {
-// Down 1
+// Ancestor ^1
 namespace A2.A3 {
 partial class C {
-// Down 3
+// Ancestor ^3
 partial struct S {
-// Up 3
+// Ancestor 4
 partial record R {
 partial record RC {
-// Up 1
+// Ancestor 2
 partial record struct RS {
 // Parent
-// Up 0
+// Ancestor 1
 public partial int P {
 get { return 0; }
+// Ancestor 0
 }}}}}}}}
 
 """),
@@ -420,7 +422,7 @@ namespace A1
 
 [AttributeUsage(AttributeTargets.Property)]
 internal class AAttribute() : TemplateAttribute(
-$"// {Name} {Parent(Name)} {Up(1,Name)} {Down(1, Name)}"
+$"// {Name} {Parent(Name)} {Ancestor(2, Name)} {Ancestor(^1, Name)}"
 );
 
 """", [
@@ -516,7 +518,7 @@ return 34 * a * b;
         Run(
 """""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"""
-// {Up(1, Param[0].Type)}/{Up(1, Param[0].Name)}
+// {Ancestor(2, Param[0].Type)}/{Ancestor(2, Param[0].Name)}
 // {Parent(Param[0].Type)}/{Parent(Param[0].Name)}
 // {Param[0].Type}/{Param[0].Name}
 """
