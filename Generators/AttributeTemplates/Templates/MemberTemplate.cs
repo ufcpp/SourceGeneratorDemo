@@ -30,6 +30,6 @@ internal record MemberTemplate(int Level, MemberExpression Expression)
     public static MemberTemplate Create(SemanticModel semantics, ExpressionSyntax e, ParameterList parameters)
     {
         (var level, e) = Intrinsic.GetLevelAndExpression(semantics, e);
-        return new(level, MemberExpression.Create(semantics, e, parameters));
+        return new(level, ExpressionWalker.Create(semantics, e, parameters));
     }
 }
