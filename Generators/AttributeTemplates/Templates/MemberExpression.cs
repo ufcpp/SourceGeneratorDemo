@@ -167,7 +167,7 @@ internal abstract class MemberExpression
                     throw AttributeTemplateException.EvaluationOutOfRange(Location);
                 }
 
-                return new Variant(str[idx]);
+                return new(str[idx]);
             }
 
             // Array indexing
@@ -254,7 +254,7 @@ internal abstract class MemberExpression
 
             if (source._array is not { } sourceArray)
             {
-                return new Variant(Array.Empty<Variant>());
+                return new([]);
             }
 
             var results = new Variant[sourceArray.Length];
@@ -264,7 +264,7 @@ internal abstract class MemberExpression
                 results[i] = Selector.Evaluate(itemContext);
             }
 
-            return new Variant(results);
+            return new(results);
         }
     }
 }
