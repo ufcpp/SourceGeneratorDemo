@@ -110,8 +110,8 @@ internal abstract class MemberExpression
 
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-                var left = Left.Evaluate(context);
-                    var right = Right.Evaluate(context);
+            var left = Left.Evaluate(context);
+            var right = Right.Evaluate(context);
 
             if (left.Kind == LiteralKind.String) return new(left._string + right.ToString(null, context.Culture));
             if (right.Kind == LiteralKind.String) return new(left.ToString(null, context.Culture) + right._string);
