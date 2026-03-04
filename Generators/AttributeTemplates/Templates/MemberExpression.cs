@@ -43,7 +43,7 @@ internal abstract class MemberExpression
 
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-            return context[Name];
+            return context[Name] ?? throw AttributeTemplateException.Unreachable(Location);
         }
     }
 

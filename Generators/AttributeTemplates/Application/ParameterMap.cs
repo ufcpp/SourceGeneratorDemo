@@ -5,6 +5,6 @@ namespace Generators.AttributeTemplates.Application;
 
 internal readonly struct ParameterMap(ParameterList parameters, ArgumentList arguments)
 {
-    public Variant this[string parameterName] => parameters.GetIndex(parameterName) is { } i ? arguments[i] : default;
+    public Variant? this[string parameterName] => parameters.GetIndex(parameterName) is { } i ? arguments[i] : null;
     public IFormatProvider Culture => arguments.Culture;
 }

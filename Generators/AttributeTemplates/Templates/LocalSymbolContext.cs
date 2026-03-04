@@ -11,7 +11,7 @@ internal class LocalSymbolContext : IExpressionEvaluationContext
         _variables = variables;
     }
 
-    public Variant this[string parameterName]
+    public Variant? this[string parameterName]
     {
         get
         {
