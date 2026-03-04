@@ -11,6 +11,14 @@ internal record MemberTemplate(Index Level, MemberExpression Expression)
         {
             if (t is not PrimaryConstructorBaseTypeSyntax pc) continue;
 
+            // Quick syntax-based filter: skip types that clearly aren't TemplateAttribute
+            // This avoids expensive GetTypeInfo() calls for unrelated base types
+            var typeString = t.Type.ToString();
+            if (!typeString.Contains("Attribute") && !typeString.Contains("Template"))
+            {
+                continue;
+            }
+
             var ti = semantics.GetTypeInfo(t.Type);
             if (ti.Type.IsTemplateAttribute())
             {
