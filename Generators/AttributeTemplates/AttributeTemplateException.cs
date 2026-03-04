@@ -73,6 +73,17 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         DiagnosticSeverity.Error,
         true);
 
+    public static AttributeTemplateException NullReference(Location location)
+        => new(Diagnostic.Create(_nullReference, location));
+
+    private static readonly DiagnosticDescriptor _nullReference = new(
+        "ATG204",
+        "Null reference",
+        "Cannot access member or element of null value",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
     public static AttributeTemplateException UnknownError(Location location, string? message = null)
         => new(Diagnostic.Create(_unknownError, location, message));
 

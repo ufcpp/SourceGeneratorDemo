@@ -153,6 +153,12 @@ internal abstract class MemberExpression
             var array = Array.Evaluate(context);
             var index = Index.Evaluate(context);
 
+            // Null check
+            if (array.Kind == LiteralKind.Null)
+            {
+                throw AttributeTemplateException.NullReference(Location);
+            }
+
             // String indexing
             if (array.Kind == LiteralKind.String)
             {

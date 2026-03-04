@@ -976,6 +976,30 @@ partial class X(int x)]
 """", [], ["ATG202"]);
     }
 
+    [Fact]
+    public void NullReference()
+    {
+        Run(""""
+class AAttribute(string? s) : AttributeTemplateGenerator.TemplateAttribute(
+$"{s[0]}"
+);
+
+[A(null)]
+partial class Class1;
+
+"""", [], [ "ATG204" ]);
+
+        Run(""""
+class AAttribute(int[]? a) : AttributeTemplateGenerator.TemplateAttribute(
+$"{a[0]}"
+);
+
+[A(null)]
+partial class Class1;
+
+"""", [], ["ATG204"]);
+    }
+
 #if false
     [Fact]
     public void X() => Run(""""

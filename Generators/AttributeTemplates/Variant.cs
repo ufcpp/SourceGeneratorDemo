@@ -53,7 +53,7 @@ internal readonly struct Variant : IFormattable
 
     public static Variant? TryFromObject(object? value) => value switch
     {
-        null => default,
+        null => new(),
         bool b => new(b),
         char c => new(c),
         sbyte sb => new(sb),
