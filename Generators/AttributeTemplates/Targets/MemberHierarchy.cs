@@ -26,28 +26,37 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
     public IEnumerator<MemberItem> GetEnumerator() => _items.AsEnumerable().GetEnumerator();
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public MemberItem GetNode(int level)
+    public MemberItem GetNode(Index level)
     {
         int i = GetIndex(level);
         return _items[i];
     }
 
-    public int GetIndex(int level)
+    public int GetIndex(Index level)
     {
-        return level < 0 ? _items.Length + level : level;
+        // items[0] = member itself (bottom), items[count-1] = global (top)
+        // ^0 means "one past end (top-level member)" which we map to global (count-1)
+        return level.IsFromEnd 
+            ? _items.Length - 1 - level.Value
+            : level.Value;
     }
 
-    public bool TryGetIntrinsicValue(string id, int level, int? parameterIndex, out string? value)
+    public bool TryGetIntrinsicValue(string id, Index level, int? parameterIndex, out string? value)
     {
-        // todo: error if null or out of range?
+        var actualLevel = GetIndex(level);
 
-        var member = GetNode(level);
+        if (actualLevel < 0 || actualLevel >= _items.Length)
+        {
+            value = null;
+            return false;
+        }
+
+        var member = _items[actualLevel];
 
         if (id == Intrinsic.Type)
         {
             if (parameterIndex is { } a)
             {
-
                 value = (member as IHasParameters)?.Parameters?[a].Type;
             }
             else

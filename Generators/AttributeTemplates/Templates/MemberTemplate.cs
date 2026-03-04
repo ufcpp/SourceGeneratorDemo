@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Generators.AttributeTemplates.Templates;
 
-internal record MemberTemplate(int Level, MemberExpression Expression)
+internal record MemberTemplate(Index Level, MemberExpression Expression)
 {
     public static MemberTemplate[]? Create(SemanticModel semantics, BaseListSyntax b, ParameterList parameters)
     {

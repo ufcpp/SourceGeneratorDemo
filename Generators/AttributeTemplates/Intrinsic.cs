@@ -50,7 +50,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     public const string Type = nameof(Type);
     public const string Name = nameof(Name);
 
-    public static (int level, int? parameterIndex, string? kind) GetIntrinsicValue(SemanticModel semantics, ExpressionSyntax e)
+    public static (Index level, int? parameterIndex, string? kind) GetIntrinsicValue(SemanticModel semantics, ExpressionSyntax e)
     {
         (var level, e) = GetLevelAndExpression(semantics, e);
 
@@ -82,9 +82,9 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         return default;
     }
 
-    public static (int level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
+    public static (Index level, ExpressionSyntax expression) GetLevelAndExpression(SemanticModel semantics, ExpressionSyntax e)
     {
-        int level = 0;
+        Index level = new(0);
         if (e is InvocationExpressionSyntax { Expression: var ex, ArgumentList.Arguments: [var arg] })
         {
             if (ex is IdentifierNameSyntax id)
@@ -92,13 +92,13 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 if (id.Identifier.ValueText == Parent)
                 {
                     // Parent($"...") pattern
-                    level = 1;
+                    level = new(1);
                     e = arg.Expression;
                 }
                 else if (id.Identifier.ValueText == Global)
                 {
-                    // Global($"...") pattern
-                    level = -1;
+                    // Global($"...") pattern -> same as ^0
+                    level = Index.FromEnd(0);
                     e = arg.Expression;
                 }
             }
@@ -109,8 +109,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
             } && IndexValue(indexExpr.Expression, semantics) is { } index)
             {
                 // Ancestor[n]($"...") pattern
-                if (index.IsFromEnd) level = -index.Value - 1;
-                else level = index.Value;
+                level = index;
                 e = arg.Expression;
             }
         }

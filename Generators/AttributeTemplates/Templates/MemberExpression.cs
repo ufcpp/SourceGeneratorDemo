@@ -50,7 +50,7 @@ internal abstract class MemberExpression
 
     public class IntrinsicExpression : MemberExpression
     {
-        public required int Level { get; init; }
+        public required Index Level { get; init; }
         public int? ParameterIndex { get; init; }
         public required string Kind { get; init; }
 
