@@ -68,7 +68,7 @@ internal abstract class MemberExpression
                 };
             }
 
-            return Variant.FromObject(iv); //todo: TryFromObject
+            return Variant.TryFromObject(iv) ?? throw AttributeTemplateException.Unreachable(Location);
         }
     }
 
