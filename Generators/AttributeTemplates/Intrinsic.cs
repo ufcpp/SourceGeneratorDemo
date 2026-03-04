@@ -21,13 +21,13 @@ namespace AttributeTemplateGenerator;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
 internal class TemplateAttribute([StringSyntax("C#")] params string[] templates) : Attribute
 {
-    protected static string Parent(string template) => Up(0, template);
-    protected static string Global(string template) => Down(0, template);
+    protected static string Parent(string template) => template;
+    protected static string Global(string template) => template;
     protected static string Up(int level, string template) => template;
     protected static string Down(int level, string template) => template;
+    protected static ReadOnlySpan<(string Name, string Type> Param => default;
     protected const string Type = "";
     protected const string Name = "";
-    protected static string Param(int index, string Kind) => "";
     public string? CultureName { get; set; }
 }
 
@@ -57,25 +57,24 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         (var level, e) = GetLevelAndExpression(semantics, e);
 
         int? index = null;
-        if (e is InvocationExpressionSyntax i)
-        {
-            if (i.Expression is not IdentifierNameSyntax n) return default;
 
-            // current syntax:
-            //   Param(0, Type), Param(0, Name), ...
-            //
-            // todo: consider alternative syntax:
-            //  Param[0].Type, Param[0].Name, ...
-
-            var name = n.Identifier.ValueText;
-            var args = i.ArgumentList.Arguments;
-            if (name == Param && args.Count == 2 && IntValue(args[0].Expression, semantics) is int x)
+        // Param[n].
+        if (e is MemberAccessExpressionSyntax
             {
-                index = x;
-                e = args[1].Expression;
+                Name: var e1,
+                Expression: ElementAccessExpressionSyntax
+                {
+                    Expression: IdentifierNameSyntax { Identifier.ValueText: Param },
+                    ArgumentList.Arguments: [var arg]
+                }
             }
+            && IntValue(arg.Expression, semantics) is int paramIndex)
+        {
+            index = paramIndex;
+            e = e1;
         }
 
+        // Check for simple Name or Type identifier
         if (e is IdentifierNameSyntax id)
         {
             var name = id.Identifier.ValueText;
@@ -104,7 +103,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 level = -1;
                 e = args[0].Expression;
             }
-            if (name == Up && args.Count == 2 && IntValue(args[0].Expression, semantics) is int x)
+            else if (name == Up && args.Count == 2 && IntValue(args[0].Expression, semantics) is int x)
             {
                 level = x + 1;
                 e = args[1].Expression;

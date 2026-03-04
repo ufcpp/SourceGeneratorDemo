@@ -493,8 +493,8 @@ set => field = value - 2;
         Run(
 """""
 class AAttribute(int n) : AttributeTemplateGenerator.TemplateAttribute($"""
-// ({Param(0, Type),8}/{Param(0, Name),-8})
-return {n} * {Param(0, Name)} * {Param(1, Name)};
+// ({Param[0].Type,8}/{Param[0].Name,-8})
+return {n} * {Param[0].Name} * {Param[1].Name};
 """
 );
 
@@ -522,9 +522,9 @@ return 34 * a * b;
         Run(
 """""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"""
-// {Up(1, Param(0, Type))}/{Up(1, Param(0, Name))}
-// {Parent(Param(0, Type))}/{Parent(Param(0, Name))}
-// {Param(0, Type)}/{Param(0, Name)}
+// {Up(1, Param[0].Type)}/{Up(1, Param[0].Name)}
+// {Parent(Param[0].Type)}/{Parent(Param[0].Name)}
+// {Param[0].Type}/{Param[0].Name}
 """
 );
 

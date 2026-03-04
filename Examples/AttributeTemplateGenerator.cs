@@ -70,11 +70,11 @@ public const int {Name}Offset = {n};
 [AttributeUsage(AttributeTargets.Method)]
 internal class MTemplateAttribute(int n) : TemplateAttribute(
 $"""
-return {n} * {Param(0, Name)} * {Param(1, Name)};
+return {n} * {Param[0].Name} * {Param[1].Name};
 """,
 Down(1, "// comment"),
 Up(2, $"""
-// comment {Type} {Name}({Param(0, Type)} {Param(0, Name)}, {Param(1, Type)} {Param(1, Name)})
+// comment {Type} {Name}({Param[0].Type} {Param[0].Name}, {Param[1].Type} {Param[1].Name})
 """));
 
 #if false
