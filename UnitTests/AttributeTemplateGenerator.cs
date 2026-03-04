@@ -283,14 +283,14 @@ namespace A1
 internal class AAttribute() : TemplateAttribute(
 "get { return 0; }",
 Parent("// Parent"),
-Ancestor(0, "// Ancestor 0"),
-Ancestor(1, "// Ancestor 1"),
-Ancestor(2, "// Ancestor 2"),
-Ancestor(4, "// Ancestor 4"),
+Ancestor[0]("// Ancestor 0"),
+Ancestor[1]("// Ancestor 1"),
+Ancestor[2]("// Ancestor 2"),
+Ancestor[4]("// Ancestor 4"),
 Global("// Global"),
-Ancestor(^0, "// Ancestor ^0"),
-Ancestor(^1, "// Ancestor ^1"),
-Ancestor(^3, "// Ancestor ^3")
+Ancestor[^0]("// Ancestor ^0"),
+Ancestor[^1]("// Ancestor ^1"),
+Ancestor[^3]("// Ancestor ^3")
 );
 
 """", [
@@ -422,7 +422,7 @@ namespace A1
 
 [AttributeUsage(AttributeTargets.Property)]
 internal class AAttribute() : TemplateAttribute(
-$"// {Name} {Parent(Name)} {Ancestor(2, Name)} {Ancestor(^1, Name)}"
+$"// {Name} {Parent(Name)} {Ancestor[2](Name)} {Ancestor[^1](Name)}"
 );
 
 """", [
@@ -518,7 +518,7 @@ return 34 * a * b;
         Run(
 """""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"""
-// {Ancestor(2, Param[0].Type)}/{Ancestor(2, Param[0].Name)}
+// {Ancestor[2](Param[0].Type)}/{Ancestor[2](Param[0].Name)}
 // {Parent(Param[0].Type)}/{Parent(Param[0].Name)}
 // {Param[0].Type}/{Param[0].Name}
 """

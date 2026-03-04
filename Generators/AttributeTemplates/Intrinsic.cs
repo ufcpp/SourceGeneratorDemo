@@ -23,7 +23,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
 {
     protected static string Parent(string template) => template;
     protected static string Global(string template) => template;
-    protected static string Ancestor(Index index, string template) => template;
+    protected static ReadOnlySpan<Func<string, string>> Ancestor => default;
     protected static ReadOnlySpan<(string Name, string Type)> Param => default;
     protected const string Type = "";
     protected const string Name = "";
@@ -87,9 +87,15 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
         int level = 0;
         if (e is InvocationExpressionSyntax i)
         {
-            if (i.Expression is not IdentifierNameSyntax n) return (0, e);
+            var name = i.Expression switch
+            {
+                IdentifierNameSyntax n => n.Identifier.ValueText,
+                ElementAccessExpressionSyntax ea when ea.Expression is IdentifierNameSyntax ean => ean.Identifier.ValueText,
+                _ => null
+            };
 
-            var name = n.Identifier.ValueText;
+            if (name is null) return (0, e);
+
             var args = i.ArgumentList.Arguments;
             if (name == Parent && args.Count == 1)
             {
@@ -101,33 +107,36 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
                 level = -1;
                 e = args[0].Expression;
             }
-            else if (name == Ancestor && args.Count == 2)
+            else if (name == Ancestor && i.Expression is ElementAccessExpressionSyntax ancestorAccess && args.Count == 1)
             {
-                var indexExpr = args[0].Expression;
+                // Ancestor[n]($"...") pattern
+                if (ancestorAccess.ArgumentList.Arguments.Count != 1) return (0, e);
+
+                var indexExpr = ancestorAccess.ArgumentList.Arguments[0].Expression;
                 // Parse Index: either int literal or ^int
                 if (indexExpr is LiteralExpressionSyntax literal && literal.Token.Value is int value)
                 {
-                    // Ancestor(0, ...) -> level = 0 (current member)
-                    // Ancestor(1, ...) -> level = 1 (parent)
-                    // Ancestor(2, ...) -> level = 2 (grandparent)
+                    // Ancestor[0]($"...") -> level = 0 (current member)
+                    // Ancestor[1]($"...") -> level = 1 (parent)
+                    // Ancestor[2]($"...") -> level = 2 (grandparent)
                     level = value;
-                    e = args[1].Expression;
+                    e = args[0].Expression;
                 }
                 else if (indexExpr is PrefixUnaryExpressionSyntax { OperatorToken.ValueText: "^" } hat
                     && hat.Operand is LiteralExpressionSyntax hatLiteral 
                     && hatLiteral.Token.Value is int hatValue)
                 {
-                    // Ancestor(^0, ...) -> (Global, out of member hierarchy)
-                    // Ancestor(^1, ...) -> level = -1 (one level down from Global, top-level member)
-                    // Ancestor(^2, ...) -> level = -2 (two levels down from Global)
+                    // Ancestor[^0]($"...") -> level = -1 (Global)
+                    // Ancestor[^1]($"...") -> level = -2 (one level down from Global)
+                    // Ancestor[^2]($"...") -> level = -3 (two levels down from Global)
                     level = -hatValue - 1;
-                    e = args[1].Expression;
+                    e = args[0].Expression;
                 }
                 else if (IntValue(indexExpr, semantics) is int constValue)
                 {
                     // Constant expression
                     level = constValue;
-                    e = args[1].Expression;
+                    e = args[0].Expression;
                 }
             }
         }
