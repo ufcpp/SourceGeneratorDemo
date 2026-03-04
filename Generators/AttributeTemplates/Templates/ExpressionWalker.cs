@@ -172,6 +172,6 @@ internal static class ExpressionWalker
                 Format = fmt
             };
         }
-        return null!; // error? unreachable?
+        throw AttributeTemplateException.Unreachable(content.GetLocation());
     }
 }
