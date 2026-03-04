@@ -49,6 +49,7 @@ internal class TemplateAttribute([StringSyntax("C#")] params string[] templates)
     public const string Param = nameof(Param);
     public const string Type = nameof(Type);
     public const string Name = nameof(Name);
+    public const string CultureName = nameof(CultureName);
 
     public static (Index level, int? parameterIndex, string? kind) GetIntrinsicValue(SemanticModel semantics, ExpressionSyntax e)
     {

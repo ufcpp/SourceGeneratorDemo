@@ -31,7 +31,7 @@ internal readonly struct ParameterList
             }
             else
             {
-                // A generic parameter needs semantics.
+                // A generic type and an array types need semantics.
                 if (p.Type is null)
                 {
                     throw AttributeTemplateException.UnknownError(p.GetLocation());

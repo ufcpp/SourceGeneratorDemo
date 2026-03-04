@@ -28,7 +28,7 @@ internal readonly struct ArgumentList(string attributeId, object?[]? values, str
         var count = 0;
         foreach (var arg in list.Arguments)
         {
-            if (arg.NameEquals is { } n && n.Name.Identifier.ValueText == "CultureName")
+            if (arg.NameEquals is { } n && n.Name.Identifier.ValueText == Intrinsic.CultureName)
             {
                 var v = semantics.GetConstantValue(arg.Expression);
                 if (!v.HasValue || v.Value is not string) throw AttributeTemplateException.Unreachable(arg.GetLocation());

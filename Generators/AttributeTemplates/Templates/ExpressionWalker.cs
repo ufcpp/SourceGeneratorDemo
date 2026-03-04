@@ -167,7 +167,7 @@ internal static class ExpressionWalker
 
             return new InterpolatedString.Interpolation
             {
-                Expression = me, // should error if me is not Name nor Type?
+                Expression = me,
                 Alignment = align,
                 Format = fmt
             };
