@@ -139,9 +139,15 @@ internal static class ExpressionWalker
 
     private static InterpolatedString Create(SemanticModel semantics, InterpolatedStringExpressionSyntax i, ParameterList parameters)
     {
+        var contents = new InterpolatedString.Content[i.Contents.Count];
+        for (int idx = 0; idx < i.Contents.Count; idx++)
+        {
+            contents[idx] = Create(semantics, i.Contents[idx], parameters);
+        }
+
         return new InterpolatedString
         {
-            Contents = [.. i.Contents.Select(c => Create(semantics, c, parameters))],
+            Contents = contents,
             Location = i.GetLocation(),
         };
     }
