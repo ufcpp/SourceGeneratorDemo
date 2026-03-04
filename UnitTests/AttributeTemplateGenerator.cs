@@ -1000,6 +1000,24 @@ partial class Class1;
 """", [], ["ATG204"]);
     }
 
+    [Fact]
+    public void NullForgiving() => Run(""""
+class AAttribute(string? s) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {s!}"
+);
+
+[A("hello")]
+partial class Class1;
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// hello
+}
+
+"""),
+]);
+
 #if false
     [Fact]
     public void X() => Run(""""

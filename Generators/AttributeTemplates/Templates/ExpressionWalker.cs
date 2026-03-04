@@ -48,6 +48,15 @@ internal static class ExpressionWalker
             };
             return new UnaryExpression { Operand = operand, Operator = op, Location = unary.GetLocation() };
         }
+        else if (e is PostfixUnaryExpressionSyntax postfixUnary)
+        {
+            if (postfixUnary.Kind() == Microsoft.CodeAnalysis.CSharp.SyntaxKind.SuppressNullableWarningExpression)
+            {
+                var operand = Create(semantics, postfixUnary.Operand, parameters);
+                return new NullForgivingExpression { Operand = operand, Location = postfixUnary.GetLocation() };
+            }
+            throw AttributeTemplateException.UnsupportedExpression(postfixUnary.Kind(), postfixUnary.GetLocation());
+        }
         else if (e is BinaryExpressionSyntax binary)
         {
             var left = Create(semantics, binary.Left, parameters);

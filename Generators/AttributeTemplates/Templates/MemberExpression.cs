@@ -102,6 +102,16 @@ internal abstract class MemberExpression
         }
     }
 
+    public class NullForgivingExpression : MemberExpression
+    {
+        public required MemberExpression Operand { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            return Operand.Evaluate(context);
+        }
+    }
+
     public class BinaryExpression : MemberExpression
     {
         public required MemberExpression Left { get; init; }
