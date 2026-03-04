@@ -1,9 +1,12 @@
+using Microsoft.CodeAnalysis;
 using System.Text;
 
 namespace Generators.AttributeTemplates.Templates;
 
 internal abstract class MemberExpression
 {
+    public required Location Location { get; init; }
+
     public abstract Variant Evaluate(IExpressionEvaluationContext context);
 
     public enum UnaryOperator
@@ -146,13 +149,13 @@ internal abstract class MemberExpression
             {
                 if (array._string is not { } str) // unreachable
                 {
-                    throw new InvalidOperationException("String is null");
+                    throw AttributeTemplateException.Unreachable(Location);
                 }
 
                 var idx = (int)index;
                 if (idx < 0 || idx >= str.Length)
                 {
-                    throw new IndexOutOfRangeException($"Index {idx} is out of range for string of length {str.Length}");
+                    throw AttributeTemplateException.EvaluationOutOfRange(Location);
                 }
 
                 return new Variant(str[idx]);
@@ -161,7 +164,7 @@ internal abstract class MemberExpression
             // Array indexing
             if (array.Kind != LiteralKind.Array) // unreachable
             {
-                throw new InvalidOperationException($"Cannot index non-array/string type: {array.Kind}");
+                throw AttributeTemplateException.Unreachable(Location);
             }
 
             if (array._array is not { } arr)
@@ -172,7 +175,7 @@ internal abstract class MemberExpression
             var index2 = (int)index;
             if (index2 < 0 || index2 >= arr.Length)
             {
-                throw new IndexOutOfRangeException($"Index {index2} is out of range for array of length {arr.Length}");
+                throw AttributeTemplateException.EvaluationOutOfRange(Location);
             }
 
             return arr[index2];

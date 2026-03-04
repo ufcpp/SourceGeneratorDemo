@@ -37,8 +37,8 @@ internal static class ApplicationProvider
                     }
                     catch (Exception e)
                     {
-                        // Wrap unexpected exceptions with location information
-                        var diagnostic = AttributeTemplateException.EvaluationError(e.Message, t.Member.Location).Diagnostic;
+                        // Catch unexpected exceptions
+                        var diagnostic = AttributeTemplateException.UnknownError(t.Member.Location, e.Message).Diagnostic;
                         return new Result<GenerationInfo>(diagnostic);
                     }
                 }).ToArray();

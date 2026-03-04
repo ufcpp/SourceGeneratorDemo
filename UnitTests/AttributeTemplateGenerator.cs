@@ -812,7 +812,7 @@ $"// {array[0]}"
 [A([])]
 partial class Class1;
 
-"""", [], [ "ATG003" ]);
+"""", [], [ "ATG203" ]);
 
         Run(""""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
@@ -822,7 +822,7 @@ $"// {"a"[1]}"
 [A]
 partial class Class1;
 
-"""", [], ["ATG003"]);
+"""", [], ["ATG203"]);
     }
 
 #if false

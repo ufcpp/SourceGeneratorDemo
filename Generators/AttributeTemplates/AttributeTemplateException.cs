@@ -29,24 +29,24 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         DiagnosticSeverity.Error,
         true);
 
-    public static AttributeTemplateException EvaluationError(string message, Location location)
-        => new(Diagnostic.Create(_evaluationError, location, message));
+    public static AttributeTemplateException EvaluationOutOfRange(Location location)
+        => new(Diagnostic.Create(_evaluationOutOfRange, location));
 
-    private static readonly DiagnosticDescriptor _evaluationError = new(
-        "ATG003",
-        "Template evaluation error",
-        "Error evaluating template: {0}",
+    private static readonly DiagnosticDescriptor _evaluationOutOfRange = new(
+        "ATG203",
+        "Index out of range",
+        "Index out of range during template evaluation",
         "AttributeTemplateGenerator",
         DiagnosticSeverity.Error,
         true);
 
-    public static AttributeTemplateException UnknownError(Location location)
-        => new(Diagnostic.Create(_unknownError, location));
+    public static AttributeTemplateException UnknownError(Location location, string? message = null)
+        => new(Diagnostic.Create(_unknownError, location, message));
 
     private static readonly DiagnosticDescriptor _unknownError = new(
         "ATG999",
         "Unknown error",
-        "An unknown error occurred during template processing",
+        "An unknown error occurred during template processing, original error: {0}",
         "AttributeTemplateGenerator",
         DiagnosticSeverity.Error,
         true);

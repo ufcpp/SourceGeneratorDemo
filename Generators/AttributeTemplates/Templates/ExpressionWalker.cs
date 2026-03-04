@@ -12,18 +12,18 @@ internal static class ExpressionWalker
 
         if (kind is not null)
         {
-            return new IntrinsicExpression { Level = level, ParameterIndex = parameterIndex, Kind = kind };
+            return new IntrinsicExpression { Level = level, ParameterIndex = parameterIndex, Kind = kind, Location = e.GetLocation() };
         }
 
-        if (TryGetConstantValue(semantics, e) is { } cv) return new Constant { Value = cv };
+        if (TryGetConstantValue(semantics, e) is { } cv) return new Constant { Value = cv, Location = e.GetLocation() };
 
         if (e is IdentifierNameSyntax id)
         {
             var name = id.Identifier.ValueText;
             var v = semantics.GetConstantValue(id);
-            if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value) };
+            if (v.HasValue) return new Constant { Value = Variant.FromObject(v.Value), Location = id.GetLocation() };
 
-            return new Parameter { Name = name };
+            return new Parameter { Name = name, Location = id.GetLocation() };
         }
         else if (e is InterpolatedStringExpressionSyntax interpolatedString)
         {
@@ -33,7 +33,7 @@ internal static class ExpressionWalker
         {
             var innerExpr = Create(semantics, cast.Expression, parameters);
             var targetType = Variant.GetLiteralKind(cast.Type.ToString());
-            return new CastExpression { Expression = innerExpr, TargetType = targetType };
+            return new CastExpression { Expression = innerExpr, TargetType = targetType, Location = cast.GetLocation() };
         }
         else if (e is PrefixUnaryExpressionSyntax unary)
         {
@@ -46,7 +46,7 @@ internal static class ExpressionWalker
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalNotExpression => UnaryOperator.Not,
                 var k => throw AttributeTemplateException.UnsupportedExpression(k, unary.GetLocation()),
             };
-            return new UnaryExpression { Operand = operand, Operator = op };
+            return new UnaryExpression { Operand = operand, Operator = op, Location = unary.GetLocation() };
         }
         else if (e is BinaryExpressionSyntax binary)
         {
@@ -65,7 +65,7 @@ internal static class ExpressionWalker
                 Microsoft.CodeAnalysis.CSharp.SyntaxKind.LogicalOrExpression => BinaryOperator.Or,
                 var k => throw AttributeTemplateException.UnsupportedExpression(k, binary.GetLocation()),
             };
-            return new BinaryExpression { Left = left, Right = right, Operator = op };
+            return new BinaryExpression { Left = left, Right = right, Operator = op, Location = binary.GetLocation() };
         }
         else if (e is ParenthesizedExpressionSyntax parenthesized)
         {
@@ -76,7 +76,7 @@ internal static class ExpressionWalker
             var condition = Create(semantics, conditional.Condition, parameters);
             var whenTrue = Create(semantics, conditional.WhenTrue, parameters);
             var whenFalse = Create(semantics, conditional.WhenFalse, parameters);
-            return new ConditionalExpression { Condition = condition, WhenTrue = whenTrue, WhenFalse = whenFalse };
+            return new ConditionalExpression { Condition = condition, WhenTrue = whenTrue, WhenFalse = whenFalse, Location = conditional.GetLocation() };
         }
         else if (e is ElementAccessExpressionSyntax elementAccess)
         {
@@ -86,7 +86,7 @@ internal static class ExpressionWalker
                 throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
             }
             var indexExpr = Create(semantics, elementAccess.ArgumentList.Arguments[0].Expression, parameters);
-            return new ElementAccessExpression { Array = arrayExpr, Index = indexExpr };
+            return new ElementAccessExpression { Array = arrayExpr, Index = indexExpr, Location = elementAccess.GetLocation() };
         }
 
         throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
@@ -112,6 +112,7 @@ internal static class ExpressionWalker
         return new InterpolatedString
         {
             Contents = [.. i.Contents.Select(c => Create(semantics, c, parameters))],
+            Location = i.GetLocation(),
         };
     }
 
