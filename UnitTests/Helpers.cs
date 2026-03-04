@@ -21,7 +21,8 @@ internal static class Helpers
         IIncrementalGenerator generator,
         [StringSyntax("C#")] string targetSource,
         GeneratedSource[] generatedSources,
-        string[]? errorIds)
+        string[]? errorIds,
+        string? header = null)
     {
         var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
         var driver = CSharpGeneratorDriver.Create(generator).WithUpdatedParseOptions(parseOptions);
@@ -46,7 +47,7 @@ internal static class Helpers
             if (map.TryGetValue(name, out var expected))
             {
                 var s = t.GetText().ToString();
-                Assert.Equal(expected, s);
+                Assert.Equal(header + expected, s);
                 matched++;
             }
         }
