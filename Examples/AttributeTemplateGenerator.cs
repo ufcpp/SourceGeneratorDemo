@@ -81,4 +81,12 @@ Up(2, $"""
 internal class AAttribute() : TemplateAttribute(
     $"""{""[0]}"""
     );
+
+internal class FirstElementAttribute(int[] array) : TemplateAttribute($"// {array[0]}");
+
+[FirstElement([1])]
+partial class SingleElementArray;
+
+[FirstElement([])]
+partial class EmptyArray;
 #endif

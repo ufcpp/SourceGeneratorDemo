@@ -29,6 +29,17 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         DiagnosticSeverity.Error,
         true);
 
+    public static AttributeTemplateException EvaluationError(string message, Location location)
+        => new(Diagnostic.Create(_evaluationError, location, message));
+
+    private static readonly DiagnosticDescriptor _evaluationError = new(
+        "ATG003",
+        "Template evaluation error",
+        "Error evaluating template: {0}",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
     public static AttributeTemplateException UnknownError(Location location)
         => new(Diagnostic.Create(_unknownError, location));
 

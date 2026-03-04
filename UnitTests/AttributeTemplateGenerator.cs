@@ -35,7 +35,6 @@ internal partial class Unrelated
 
 internal class UnrelatedAttribute : Attribute;
 
-        
 """");
 
     [Fact]
@@ -170,7 +169,6 @@ $"""
 [A]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -190,7 +188,6 @@ class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"// {1}{'2'}{
 [A]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -216,7 +213,6 @@ class AAttribute() : AttributeTemplateGenerator.TemplateAttribute($"// {Constant
 [A]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -337,7 +333,6 @@ partial class Class1
     }
 }
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -465,7 +460,6 @@ partial class Class1
     public partial int Q { get; }
 }
 
-        
 """", [
 new("ATG_Class1.P","""
 partial class Class1 {
@@ -560,7 +554,6 @@ $"// {(byte)'c'}, {(System.UInt16)123}, {(decimal)1.2}, {(Char)0x61}"
 [A]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -579,7 +572,6 @@ $"// {(byte)('a' + 2)}, {(System.UInt16)(100 + 30 - 7)}, {-(decimal)-1.2}, {(Cha
 [A]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -601,7 +593,6 @@ Parent("//" + 1.2)
 [A(CultureName = "fr")]
 partial class Class1;
 
-        
 """", [
 new("ATG_Class1","""
 //1.2
@@ -628,7 +619,6 @@ $"// {a} {!a} {a & b} {a && b} {a | b} {a || b}"
 [A(true, true)]
 partial class Class1;
 
-
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -652,7 +642,6 @@ $"// {a} {~a} {a & b} {a | b}"
 [A(7, 10)]
 partial class Class1;
 
-
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -673,7 +662,6 @@ $"// {(condition ? a : b)}"
 [A(true, 1, 2)]
 [A(false, 10, 20)]
 partial class Class1;
-
 
 """", [
 new("ATG_Class1","""
@@ -710,7 +698,6 @@ $"// {x}"
 
 [A<int>(1)]
 partial class Class1;
-
 
 """", [
 new("ATG_Class1","""
@@ -750,7 +737,6 @@ $"{arr}"
 [A(["//a", "//b", "//c"])]
 partial class Class1;
 
-
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -771,7 +757,6 @@ $"// {arr[0]}, {arr[1]}, {arr[2]}"
 [A([1, 2, 3])]
 partial class Class1;
 
-
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -790,7 +775,6 @@ $"// {"abc"[0]}, {"xyz"[1]}, {"hello"[4]}"
 [A]
 partial class Class1;
 
-
 """", [
 new("ATG_Class1","""
 partial class Class1 {
@@ -800,6 +784,47 @@ partial class Class1 {
 """),
 ]);
 
+    [Fact]
+    public void IndexOutOfRange()
+    {
+        Run(""""
+class AAttribute(int[] array) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {array[0]}"
+);
+
+[A([1])]
+partial class Class1;
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+// 1
+}
+
+"""),
+]);
+
+        Run(""""
+class AAttribute(int[] array) : AttributeTemplateGenerator.TemplateAttribute(
+$"// {array[0]}"
+);
+
+[A([])]
+partial class Class1;
+
+"""", [], [ "ATG003" ]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {"a"[1]}"
+);
+
+[A]
+partial class Class1;
+
+"""", [], ["ATG003"]);
+    }
+
 #if false
     [Fact]
     public void X() => Run(""""
@@ -808,7 +833,6 @@ class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 
 [A]
 partial class Class1;
-
 
 """", [
 new("ATG_Class1","""

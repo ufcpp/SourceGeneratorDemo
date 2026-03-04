@@ -7,6 +7,7 @@ namespace Generators.AttributeTemplates.Targets;
 internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnumerable<MemberItem>
 {
     public string Id { get; } = id;
+    public Location Location { get; } = member.GetLocation();
     private readonly MemberItem[] _items = CreateItems(member);
 
     private static MemberItem[] CreateItems(MemberDeclarationSyntax member)
