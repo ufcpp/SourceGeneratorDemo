@@ -56,10 +56,20 @@ internal abstract class MemberExpression
 
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-            if (context.TryGetIntrinsicValue(Kind, Level, ParameterIndex, out var iv))
-                return Variant.FromObject(iv); //todo: TryFromObject
+            var error = context.TryGetIntrinsicValue(Kind, Level, ParameterIndex, out var iv);
 
-            return default; // else error?
+            if (error != IntrinsicError.None)
+            {
+                throw error switch
+                {
+                    IntrinsicError.LevelOutOfRange => AttributeTemplateException.LevelOutOfRange(Location),
+                    IntrinsicError.MemberHasNoParameters => AttributeTemplateException.MemberHasNoParameters(Location),
+                    IntrinsicError.ParameterIndexOutOfRange => AttributeTemplateException.ParameterIndexOutOfRange(Location),
+                    _ => AttributeTemplateException.Unreachable(Location),
+                };
+            }
+
+            return Variant.FromObject(iv); //todo: TryFromObject
         }
     }
 

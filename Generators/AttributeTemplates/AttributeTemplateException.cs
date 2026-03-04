@@ -29,6 +29,39 @@ internal class AttributeTemplateException(Diagnostic diagnostic) : Exception
         DiagnosticSeverity.Error,
         true);
 
+    public static AttributeTemplateException LevelOutOfRange(Location location)
+        => new(Diagnostic.Create(_levelOutOfRange, location));
+
+    private static readonly DiagnosticDescriptor _levelOutOfRange = new(
+        "ATG200",
+        "Level out of range",
+        "The specified level is out of range for the member hierarchy",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
+    public static AttributeTemplateException MemberHasNoParameters(Location location)
+        => new(Diagnostic.Create(_memberHasNoParameters, location));
+
+    private static readonly DiagnosticDescriptor _memberHasNoParameters = new(
+        "ATG201",
+        "Member has no parameters",
+        "The member at the specified level does not have parameters",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
+    public static AttributeTemplateException ParameterIndexOutOfRange(Location location)
+        => new(Diagnostic.Create(_parameterIndexOutOfRange, location));
+
+    private static readonly DiagnosticDescriptor _parameterIndexOutOfRange = new(
+        "ATG202",
+        "Parameter index out of range",
+        "The parameter index is out of range for the member's parameter list",
+        "AttributeTemplateGenerator",
+        DiagnosticSeverity.Error,
+        true);
+
     public static AttributeTemplateException EvaluationOutOfRange(Location location)
         => new(Diagnostic.Create(_evaluationOutOfRange, location));
 

@@ -832,6 +832,90 @@ partial class Class1;
 """", [], ["ATG203"]);
     }
 
+    [Fact]
+    public void IntrinsicError()
+    {
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Ancestor[4](Name)}"
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG200"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Ancestor[^4](Name)}"
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG200"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Ancestor[1](Param[0].Name)}"
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG201"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Parent(Param[0].Name)}"
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG201"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+$"// {Param[1].Name}"
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG202"]);
+    }
+
 #if false
     [Fact]
     public void X() => Run(""""

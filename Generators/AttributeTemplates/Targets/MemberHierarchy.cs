@@ -41,14 +41,14 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
             : level.Value;
     }
 
-    public bool TryGetIntrinsicValue(string id, Index level, int? parameterIndex, out string? value)
+    public IntrinsicError TryGetIntrinsicValue(string id, Index level, int? parameterIndex, out string? value)
     {
         var actualLevel = GetIndex(level);
 
         if (actualLevel < 0 || actualLevel >= _items.Length)
         {
             value = null;
-            return false;
+            return IntrinsicError.LevelOutOfRange;
         }
 
         var member = _items[actualLevel];
@@ -57,29 +57,51 @@ internal class MemberHierarchy(string id, MemberDeclarationSyntax member) : IEnu
         {
             if (parameterIndex is { } a)
             {
-                value = (member as IHasParameters)?.Parameters?[a].Type;
+                var parameters = (member as IHasParameters)?.Parameters;
+                if (parameters == null)
+                {
+                    value = null;
+                    return IntrinsicError.MemberHasNoParameters;
+                }
+                if (a < 0 || a >= parameters.Length)
+                {
+                    value = null;
+                    return IntrinsicError.ParameterIndexOutOfRange;
+                }
+                value = parameters[a].Type;
             }
             else
             {
                 value = (member as TypedMember)?.Type;
             }
-            return true;
+            return IntrinsicError.None;
         }
         else if (id == Intrinsic.Name)
         {
             if (parameterIndex is { } a)
             {
-                value = (member as IHasParameters)?.Parameters?[a].Name;
+                var parameters = (member as IHasParameters)?.Parameters;
+                if (parameters == null)
+                {
+                    value = null;
+                    return IntrinsicError.MemberHasNoParameters;
+                }
+                if (a < 0 || a >= parameters.Length)
+                {
+                    value = null;
+                    return IntrinsicError.ParameterIndexOutOfRange;
+                }
+                value = parameters[a].Name;
             }
             else
             {
                 value = (member as NamedMember)?.Name;
             }
-            return true;
+            return IntrinsicError.None;
         }
 
         value = null;
-        return false;
+        return IntrinsicError.None;
 
     }
 }
