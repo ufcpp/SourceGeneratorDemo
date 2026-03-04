@@ -41,6 +41,12 @@ internal static class Generator
                 {
                     var c = mt.Expression.Evaluate(new ExpressionEvaluationContext(target.Member, map));
                     var i = target.Member.GetIndex(mt.Level);
+
+                    if (i < 0 || i >= contents.Length)
+                    {
+                        throw AttributeTemplateException.LevelOutOfRange(mt.Expression.Location);
+                    }
+
                     contents[i] += c + @"
 ";
                 }

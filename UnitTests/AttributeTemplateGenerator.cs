@@ -837,6 +837,38 @@ partial class Class1;
     {
         Run(""""
 class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+Ancestor[4](Name)
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG200"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
+Ancestor[^4](Name)
+);
+
+partial class X(int x)]
+{
+    partial class Y
+    {
+        [A]
+        partial void M(int x);
+    }
+}
+
+"""", [], ["ATG200"]);
+
+        Run(""""
+class AAttribute() : AttributeTemplateGenerator.TemplateAttribute(
 $"// {Ancestor[4](Name)}"
 );
 
