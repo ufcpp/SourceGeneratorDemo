@@ -77,6 +77,14 @@ Ancestor[3]($"""
 // comment {Type} {Name}({Param[0].Type} {Param[0].Name}, {Param[1].Type} {Param[1].Name})
 """));
 
+[AttributeUsage(AttributeTargets.Class)]
+class StringEnumAttribute(string[] names) : AttributeTemplateGenerator.TemplateAttribute(
+$"{from name in names select $"    public const string {name} = nameof({name});"}"
+);
+
+[StringEnum(["X", "Abc", "AbdXyz"])]
+partial class Strings;
+
 #if false
 internal class AAttribute() : TemplateAttribute(
     $"""{""[0]}"""

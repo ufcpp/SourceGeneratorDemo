@@ -43,8 +43,7 @@ internal abstract class MemberExpression
 
         public override Variant Evaluate(IExpressionEvaluationContext context)
         {
-            return Variant.FromObject(context[Name]);
-            //todo: use TryFromObject and report an error
+            return context[Name];
         }
     }
 

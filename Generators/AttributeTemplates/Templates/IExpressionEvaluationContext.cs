@@ -3,6 +3,6 @@ namespace Generators.AttributeTemplates.Templates;
 internal interface IExpressionEvaluationContext
 {
     IntrinsicError TryGetIntrinsicValue(string id, Index level, int? parameterIndex, out string? value);
-    object? this[string parameterName] { get; }
+    Variant this[string parameterName] { get; }
     IFormatProvider Culture { get; }
 }

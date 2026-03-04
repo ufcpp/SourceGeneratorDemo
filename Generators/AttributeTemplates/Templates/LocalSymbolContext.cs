@@ -11,13 +11,13 @@ internal class LocalSymbolContext : IExpressionEvaluationContext
         _variables = variables;
     }
 
-    public object? this[string parameterName]
+    public Variant this[string parameterName]
     {
         get
         {
             foreach (var (name, value) in _variables)
             {
-                if (name == parameterName) return value.ToObject();
+                if (name == parameterName) return value;
             }
             return _parent[parameterName];
         }
