@@ -88,6 +88,36 @@ internal static class ExpressionWalker
             var indexExpr = Create(semantics, elementAccess.ArgumentList.Arguments[0].Expression, parameters);
             return new ElementAccessExpression { Array = arrayExpr, Index = indexExpr, Location = elementAccess.GetLocation() };
         }
+        else if (e is QueryExpressionSyntax query)
+        {
+            // Support simple: from x in array select expression
+            if (query.Body.Clauses.Count != 0)
+            {
+                throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
+            }
+
+            if (query.FromClause is not { } fromClause)
+            {
+                throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
+            }
+
+            if (query.Body.SelectOrGroup is not SelectClauseSyntax selectClause)
+            {
+                throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
+            }
+
+            var rangeVariable = fromClause.Identifier.ValueText;
+            var source = Create(semantics, fromClause.Expression, parameters);
+            var selector = Create(semantics, selectClause.Expression, parameters);
+
+            return new QueryExpression
+            {
+                RangeVariable = rangeVariable,
+                Source = source,
+                Selector = selector,
+                Location = query.GetLocation()
+            };
+        }
 
         throw AttributeTemplateException.UnsupportedExpression(e.Kind(), e.GetLocation());
     }

@@ -237,4 +237,35 @@ internal abstract class MemberExpression
             public required string? Format { get; init; }
         }
     }
+
+    public class QueryExpression : MemberExpression
+    {
+        public required string RangeVariable { get; init; }
+        public required MemberExpression Source { get; init; }
+        public required MemberExpression Selector { get; init; }
+
+        public override Variant Evaluate(IExpressionEvaluationContext context)
+        {
+            var source = Source.Evaluate(context);
+
+            if (source.Kind != LiteralKind.Array)
+            {
+                throw AttributeTemplateException.Unreachable(Location);
+            }
+
+            if (source._array is not { } sourceArray)
+            {
+                return new Variant(Array.Empty<Variant>());
+            }
+
+            var results = new Variant[sourceArray.Length];
+            for (int i = 0; i < sourceArray.Length; i++)
+            {
+                var itemContext = new LocalSymbolContext(context, (RangeVariable, sourceArray[i]));
+                results[i] = Selector.Evaluate(itemContext);
+            }
+
+            return new Variant(results);
+        }
+    }
 }

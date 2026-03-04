@@ -833,6 +833,26 @@ partial class Class1;
     }
 
     [Fact]
+    public void QueryExpression() => Run(""""
+class AAttribute(string[] names) : AttributeTemplateGenerator.TemplateAttribute(
+$"{from name in names select $"    public const string {name} = nameof({name});"}"
+);
+
+[A(["X", "Abc", "AbdXyz"])]
+partial class Class1;
+
+"""", [
+new("ATG_Class1","""
+partial class Class1 {
+    public const string X = nameof(X);
+    public const string Abc = nameof(Abc);
+    public const string AbdXyz = nameof(AbdXyz);
+}
+
+"""),
+]);
+
+    [Fact]
     public void IntrinsicError()
     {
         Run(""""
