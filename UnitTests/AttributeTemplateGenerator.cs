@@ -985,7 +985,4 @@ partial class Class1 {
 """),
 ]);
 #endif
-
-    //todo: erroneous case
-    // class AAttribute : TemplateAttribute($"template"); // correctly: class AAttribute() <- paren needed
 }
