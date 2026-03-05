@@ -53,6 +53,10 @@ This project includes `ConstantInterpolationGenerator`, which is a **port from t
 
 Both implementations provide the same functionality, but this .NET 8 version leverages modern APIs like `DefaultInterpolatedStringHandler` that aren't available in .NET Standard 2.0, resulting in better performance and more maintainable code.
 
+### Working Sample
+
+The **`Net8Examples` project** references this Source Generator and demonstrates it in action. You can see how the generated code works in a real project targeting .NET 8.
+
 ## Verifying Analyzer Runtime Environment
 
 The `Generators` project includes `VersionInfoAnalyzer`, a diagnostic analyzer that helps you verify which runtime environment your analyzers are running on.
