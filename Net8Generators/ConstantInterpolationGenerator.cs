@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Globalization;
-using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Generators;
 
@@ -84,40 +84,46 @@ public class ConstantInterpolationGenerator : IIncrementalGenerator
 
         culture ??= CultureInfo.InvariantCulture;
 
-        // I want to use DefaultInterpolatedStringHandler here, but it doesn't exist in netstandard2.0.
-        var s = new StringBuilder();
+        // .NET 8 allows us to use DefaultInterpolatedStringHandler for better performance
+        var literalLength = 0;
+        var formattedCount = 0;
 
         foreach (var node in i.Contents)
         {
             if (node is InterpolatedStringTextSyntax text)
             {
-                s.Append(text.TextToken.ValueText);
+                literalLength += text.TextToken.ValueText.Length;
+            }
+            else if (node is InterpolationSyntax)
+            {
+                formattedCount++;
+            }
+        }
+
+        var handler = new DefaultInterpolatedStringHandler(literalLength, formattedCount, culture);
+
+        foreach (var node in i.Contents)
+        {
+            if (node is InterpolatedStringTextSyntax text)
+            {
+                handler.AppendLiteral(text.TextToken.ValueText);
             }
             else if (node is InterpolationSyntax hole)
             {
                 if (semantic.GetConstantValue(hole.Expression, ct) is not { HasValue: true, Value: var value }) return error(s_NonConstantError, hole.Expression);
 
-                var fmt = GetFormatString(
-                    hole.AlignmentClause is { } a && semantic.GetConstantValue(a.Value, ct) is { HasValue: true, Value: int align } ? align : null,
-                    hole.FormatClause?.FormatStringToken.ValueText);
+                var alignment = hole.AlignmentClause is { } a && semantic.GetConstantValue(a.Value, ct) is { HasValue: true, Value: int align } ? align : 0;
+                var format = hole.FormatClause?.FormatStringToken.ValueText;
 
-                s.AppendFormat(culture, fmt, value);
+                handler.AppendFormatted(value, alignment, format);
             }
         }
 
         var loc = semantic.GetInterceptableLocation(invocation, ct);
         if (loc is null) return null;
 
-        return new Result(loc, s.ToString(), culture == CultureInfo.InvariantCulture);
+        return new Result(loc, handler.ToStringAndClear(), culture == CultureInfo.InvariantCulture);
     }
-
-    private static string GetFormatString(int? alignment, string? format) => (alignment, format) switch
-    {
-        ({ } x, null) => $"{{0:{x}}}",
-        (null, { } x) => $"{{0,{x}}}",
-        ({ } x, { } y) => $"{{0,{x}:{y}}}",
-        _ => "{0}",
-    };
 
     private static void Execute(SourceProductionContext context, ConversionInfo info)
     {
