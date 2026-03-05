@@ -1,9 +1,11 @@
 <Solution>
-  <Project Path="Generators/Generators.csproj" />
-  <Project Path="UnitTests/UnitTests.csproj" />
-  <Project Path="Examples/Examples.csproj" />
   <Folder Name="/.props/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
   </Folder>
+  <Project Path="Examples/Examples.csproj" />
+  <Project Path="Generators/Generators.csproj" />
+  <Project Path="Net8Examples/Net8Examples.csproj" />
+  <Project Path="Net8Generators/Net8Generators.csproj" />
+  <Project Path="UnitTests/UnitTests.csproj" />
 </Solution>

@@ -1,0 +1,26 @@
+using ConstantInterpolationGenerator;
+
+namespace Examples;
+
+internal class ConstantInterpolationGeneratorExample
+{
+    public static void Run()
+    {
+        var a = $"ab{1}cd{1.2}ef{1.1m}".Invariant();
+        var b = $"ab{1}cd{1.2}ef{1.1m}".Local("fr");
+        var c = $"ab{"constant"}cd".Invariant();
+        var d = $"/{1234.5,8:n1}/{1234.5,-8:n1}//{1234.5,1:n1}/".Invariant();
+        var e = $"/{1234.5,8:n1}/{1234.5,-8:n1}//{1234.5,1:n1}/".Local("de");
+        var f = $"/{1234.5,8:n1}/{1234.5,-8:n1}//{1234.5,1:n1}/".Local("fr");
+
+#if false
+        var x = 1;
+        var g = $"ab{x}".Invariant();
+        var h = $"ab{DateTime.Now}".Invariant();
+        var y = "ja";
+        var i = $"ab{1}".Local(y);
+        var j = $"ab{1}".Local("xyz");
+        var k = "abc".Local("xyz");
+#endif
+    }
+}
