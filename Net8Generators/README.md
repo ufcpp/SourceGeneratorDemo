@@ -53,6 +53,29 @@ This project includes `ConstantInterpolationGenerator`, which is a **port from t
 
 Both implementations provide the same functionality, but this .NET 8 version leverages modern APIs like `DefaultInterpolatedStringHandler` that aren't available in .NET Standard 2.0, resulting in better performance and more maintainable code.
 
+## Verifying Analyzer Runtime Environment
+
+The `Generators` project includes `VersionInfoAnalyzer`, a diagnostic analyzer that helps you verify which runtime environment your analyzers are running on.
+
+### How to Use
+
+Add the following directive to any C# file in your project:
+
+```csharp
+#error version
+```
+
+This will trigger a build error that displays:
+- **Compiler version** (Roslyn version)
+- **Runtime** (e.g., ".NET 8.0.1")
+- **Operating System**
+
+### Why This is Useful
+
+This analyzer provides a simple way to confirm that your development environment is indeed running analyzers on .NET 8 (or whatever runtime is configured). The technique is inspired by Roslyn's own version reporting mechanism, enhanced with `RuntimeInformation.FrameworkDescription` to show the runtime details.
+
+Use this to verify your tooling setup before committing to .NET 8 Source Generators.
+
 ## References
 
 - [Visual Studio 2022 Architecture Changes](https://devblogs.microsoft.com/visualstudio/visual-studio-2022/)
