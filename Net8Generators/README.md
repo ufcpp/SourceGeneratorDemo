@@ -57,6 +57,10 @@ Both implementations provide the same functionality, but this .NET 8 version lev
 
 The **`Net8Examples` project** references this Source Generator and demonstrates it in action. You can see how the generated code works in a real project targeting .NET 8.
 
+> **Note**: While IDE-based analyzer execution had .NET Framework constraints for a long time, command-line builds with `dotnet` never had this limitation.
+You can verify this by running `dotnet run` on the `Net8Examples` folder.
+The .NET 8 Source Generator will execute successfully.
+
 ## Verifying Analyzer Runtime Environment
 
 The `Generators` project includes `VersionInfoAnalyzer`, a diagnostic analyzer that helps you verify which runtime environment your analyzers are running on.
