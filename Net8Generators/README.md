@@ -23,7 +23,7 @@ These changes mean:
 
 > **Note**: The specific version requirements may vary. Verify that your development environment can execute analyzers on .NET 8 runtime before targeting .NET 8 in your Source Generator projects.
 
-> **Verified Environment**: As of this writing, Visual Studio 2026 runs analyzers on **.NET 8.0.24**, confirming that .NET 8-targeted Source Generators can execute successfully.
+> **Note**: As of this writing, Visual Studio 2026 runs analyzers on **.NET 8.0.24**, confirming that .NET 8-targeted Source Generators can execute successfully. For reference, VS Code with C# Dev Kit runs analyzers on **.NET 10.0.3**.
 
 ### Benefits of Targeting .NET 8
 
