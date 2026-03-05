@@ -21,7 +21,9 @@ These changes mean:
 - Source Generators can leverage modern .NET APIs and features
 - Better performance and access to the latest runtime optimizations
 
-> **Note**: The specific version requirements may vary. Verify that your development environment supports .NET 8 runtime for analyzers before targeting .NET 8 in your Source Generator projects.
+> **Note**: The specific version requirements may vary. Verify that your development environment can execute analyzers on .NET 8 runtime before targeting .NET 8 in your Source Generator projects.
+
+> **Verified Environment**: As of this writing, Visual Studio 2026 runs analyzers on **.NET 8.0.24**, confirming that .NET 8-targeted Source Generators can execute successfully.
 
 ### Benefits of Targeting .NET 8
 
@@ -41,9 +43,9 @@ By targeting .NET 8 directly, Source Generators can leverage:
 - Better developer experience
 
 **Limitations:**
-- Requires a modern development environment with out-of-process analyzer support
+- Requires a modern development environment with out-of-process analyzer execution
 - Not compatible with older development environments still using .NET Framework-based hosts
-- Verify your tooling supports .NET 8 runtime for analyzers before adopting
+- Verify your tooling can run analyzers on .NET 8 runtime before adopting
 
 > **Note**: Targeting .NET 8 for Source Generators may trigger **RS1041** warning (analyzer compatibility warning). This warning is suppressed in `.editorconfig` for this project, as it's expected behavior when intentionally targeting modern .NET versions.
 
@@ -82,7 +84,7 @@ This will trigger a build error that displays:
 
 This analyzer provides a simple way to confirm that your development environment is indeed running analyzers on .NET 8 (or whatever runtime is configured). The technique is inspired by Roslyn's own version reporting mechanism, enhanced with `RuntimeInformation.FrameworkDescription` to show the runtime details.
 
-Use this to verify your tooling setup before committing to .NET 8 Source Generators.
+Use this to verify your tooling setup before deciding to use .NET 8 Source Generators.
 
 ## References
 
