@@ -3,7 +3,7 @@ using Xunit;
 
 namespace UnitTests;
 
-public class DependencyPropertyGeneratorTests
+public class Tests
 {
     [Fact]
     public void Generate()
@@ -13,10 +13,6 @@ public class DependencyPropertyGeneratorTests
 """
 
 """,
-[
-    new("filename", """
-
-"""),
-]);
+[]);
     }
 }

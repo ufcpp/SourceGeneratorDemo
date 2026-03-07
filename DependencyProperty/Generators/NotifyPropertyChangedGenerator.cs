@@ -52,11 +52,15 @@ public class NotifyPropertyChangedGenerator : IIncrementalGenerator
         var t = context.SemanticModel.GetTypeInfo(p.Type).Type!;
         var ct = context.SemanticModel.GetDeclaredSymbol(p)!.ContainingType;
 
+        var namespaceName = ct.ContainingNamespace.IsGlobalNamespace
+            ? string.Empty
+            : ct.ContainingNamespace.ToDisplayString();
+
         var pi = new PropertyInfo(
             p.Identifier.ValueText,
             GetCSharpTypeName(t),
             ct.Name,
-            ct.ContainingNamespace.ToDisplayString());
+            namespaceName);
 
         return pi;
     }
