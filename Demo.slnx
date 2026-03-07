@@ -2,10 +2,37 @@
   <Folder Name="/.props/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
   </Folder>
-  <Project Path="Examples/Examples.csproj" />
-  <Project Path="Generators/Generators.csproj" />
-  <Project Path="Net8Examples/Net8Examples.csproj" />
-  <Project Path="Net8Generators/Net8Generators.csproj" />
-  <Project Path="UnitTests/UnitTests.csproj" />
+  <Folder Name="/Common/">
+    <File Path="Common/PolyFill.cs" />
+  </Folder>
+  <Folder Name="/VersionInfo/">
+    <Project Path="VersionInfo/Examples/Examples.csproj" />
+    <Project Path="VersionInfo/Generators/Generators.csproj" />
+  </Folder>
+  <Folder Name="/DependencyProperty/">
+    <Project Path="DependencyProperty/Examples/Examples.csproj" />
+    <Project Path="DependencyProperty/Generators/Generators.csproj" />
+    <Project Path="DependencyProperty/UnitTests/UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/ConstantInterpolation/">
+    <Project Path="ConstantInterpolation/Examples/Examples.csproj" />
+    <Project Path="ConstantInterpolation/Generators/Generators.csproj" />
+    <Project Path="ConstantInterpolation/UnitTests/UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/NamingPolicy/">
+    <Project Path="NamingPolicy/Examples/Examples.csproj" />
+    <Project Path="NamingPolicy/Generators/Generators.csproj" />
+    <Project Path="NamingPolicy/UnitTests/UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/AttributeTemplate/">
+    <Project Path="AttributeTemplate/Examples/Examples.csproj" />
+    <Project Path="AttributeTemplate/Generators/Generators.csproj" />
+    <Project Path="AttributeTemplate/UnitTests/UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Net8.0/">
+    <Project Path="Net8.0/Examples/Examples.csproj" />
+    <Project Path="Net8.0/Generators/Generators.csproj" />
+  </Folder>
 </Solution>
