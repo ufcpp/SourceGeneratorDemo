@@ -13,6 +13,7 @@
     <Project Path="VersionInfo/Generators/Generators.csproj" />
   </Folder>
   <Folder Name="/DependencyProperty/">
+    <File Path="DependencyProperty/README.md" />
     <Project Path="DependencyProperty/Examples/Examples.csproj" />
     <Project Path="DependencyProperty/Generators/Generators.csproj" />
     <Project Path="DependencyProperty/UnitTests/UnitTests.csproj" />
