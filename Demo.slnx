@@ -32,6 +32,7 @@
     <Project Path="AttributeTemplate/UnitTests/UnitTests.csproj" />
   </Folder>
   <Folder Name="/Net8.0/">
+    <File Path="Net8.0/README.md" />
     <Project Path="Net8.0/Examples/Examples.csproj" />
     <Project Path="Net8.0/Generators/Generators.csproj" />
   </Folder>
