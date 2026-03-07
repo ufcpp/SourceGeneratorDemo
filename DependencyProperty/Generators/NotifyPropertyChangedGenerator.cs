@@ -95,18 +95,15 @@ public class NotifyPropertyChangedGenerator : IIncrementalGenerator
 
         foreach (var property in properties)
         {
-            var backingFieldName = $"_{char.ToLowerInvariant(property.PropertyName[0])}{property.PropertyName[1..]}";
             var eventArgsFieldName = $"{property.PropertyName}PropertyChangedEventArgs";
 
             sb.Append($$"""
                 private static readonly PropertyChangedEventArgs {{eventArgsFieldName}} = new PropertyChangedEventArgs(nameof({{property.PropertyName}}));
 
-                private {{property.PropertyType}} {{backingFieldName}};
-
                 public partial {{property.PropertyType}} {{property.PropertyName}}
                 {
-                    get => {{backingFieldName}};
-                    set => SetProperty(ref {{backingFieldName}}, value, {{eventArgsFieldName}});
+                    get => field;
+                    set => SetProperty(ref field, value, {{eventArgsFieldName}});
                 }
 
 
