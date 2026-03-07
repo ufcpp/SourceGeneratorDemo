@@ -19,11 +19,13 @@
     <Project Path="DependencyProperty/UnitTests/UnitTests.csproj" />
   </Folder>
   <Folder Name="/ConstantInterpolation/">
+    <File Path="ConstantInterpolation/README.md" />
     <Project Path="ConstantInterpolation/Examples/Examples.csproj" />
     <Project Path="ConstantInterpolation/Generators/Generators.csproj" />
     <Project Path="ConstantInterpolation/UnitTests/UnitTests.csproj" />
   </Folder>
   <Folder Name="/NamingPolicy/">
+    <File Path="NamingPolicy/README.md" />
     <Project Path="NamingPolicy/Examples/Examples.csproj" />
     <Project Path="NamingPolicy/Generators/Generators.csproj" />
     <Project Path="NamingPolicy/UnitTests/UnitTests.csproj" />
