@@ -52,8 +52,8 @@ class NotifyClassAttribute() : TemplateAttribute(
 [AttributeUsage(AttributeTargets.Property)]
 class NotifyPropertyAttribute() : TemplateAttribute(
 $"""
-        get => field;
-        set => SetProperty(ref field, value, {Name}PropertyChangedEventArgs);
+    get => field;
+    set => SetProperty(ref field, value, {Name}PropertyChangedEventArgs);
 """,
 Parent($"""
     private static readonly System.ComponentModel.PropertyChangedEventArgs {Name}PropertyChangedEventArgs = new(nameof({Name}));
