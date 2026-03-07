@@ -31,6 +31,7 @@
     <Project Path="NamingPolicy/UnitTests/UnitTests.csproj" />
   </Folder>
   <Folder Name="/AttributeTemplate/">
+    <File Path="AttributeTemplate/README.md" />
     <Project Path="AttributeTemplate/Examples/Examples.csproj" />
     <Project Path="AttributeTemplate/Generators/Generators.csproj" />
     <Project Path="AttributeTemplate/UnitTests/UnitTests.csproj" />
