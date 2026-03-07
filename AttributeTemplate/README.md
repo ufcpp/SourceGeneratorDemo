@@ -14,7 +14,7 @@ The generator supports:
 - **Type casting**: `(byte)value`, `(int)expression`
 - **Conditional expressions**: `condition ? whenTrue : whenFalse`
 - **Array operations**: Array literals, indexing (`array[0]`), string indexing (`"abc"[1]`)
-- **Query expressions**: `from x in array select expression`
+- **Array iteration**: Generate code for each element in array parameters using `from x in array select expression` syntax
 - **Format specifiers**: `{value:n2}`, `{value,10}`, `{value,-8:x}`
 - **Culture-specific formatting**: `CultureName = "fr"`
 - **Multiple template levels**: Generate code at different hierarchy levels
@@ -237,7 +237,14 @@ partial class Inner {
 }}}
 ```
 
-### Array Parameters
+### Generating Code from Array Parameters
+
+When your template attribute takes an array parameter, you can generate code for each element using `from ... in ... select ...` syntax. This allows you to expand array parameters into multiple code statements.
+
+**Note:** Only basic `from` and `select` clauses are supported. This is not a full LINQ query expression implementation, but rather a way to iterate over array parameters and generate code for each element.
+
+**Array Expansion in Interpolation:**
+When you place an array (or the result of `from ... select ...`) inside `{}` in an interpolated string, the elements are joined with newlines:
 
 ```csharp
 [AttributeUsage(AttributeTargets.Class)]
@@ -257,6 +264,19 @@ partial class StatusCodes {
     public const string Error = nameof(Error);
 }
 ```
+
+You can also use arrays directly:
+```csharp
+[AttributeUsage(AttributeTargets.Class)]
+class DirectArrayAttribute(string[] items) : TemplateAttribute(
+    $"""
+    // Items:
+    {items}
+    """
+);
+```
+
+This would expand the array elements, each on a new line.
 
 ### Culture-Specific Formatting
 
@@ -344,10 +364,12 @@ The generator supports most C# constant expressions:
 - **Array indexing**: `array[0]`
 - **String indexing**: `"string"[1]`
 
-### Query Expressions
+### Array Iteration
 ```csharp
 from item in array select expression
 ```
+
+Used to generate code for each element in array parameters. Only basic `from` and `select` clauses are supported (no `where`, `orderby`, `group by`, etc.).
 
 ## How It Works
 
@@ -401,40 +423,3 @@ Application/   - Template application logic
 - **`LocalSymbolContext`** - Scoped context for query variables
 - **`MemberHierarchy`** - Member containment hierarchy
 - **`ArgumentList`** - Typed attribute arguments
-
-## Examples
-
-The `Examples` project demonstrates various use cases:
-
-### NotifyPropertyChanged.cs
-Demonstrates implementing `INotifyPropertyChanged` pattern using templates:
-- `NotifyClass` attribute generates event infrastructure and helper methods
-- `NotifyProperty` attribute generates property setters with change notification
-- Shows combination of class-level and property-level templates
-
-### ParameterizedTemplate.cs
-Shows basic parameterized templates:
-- Property template with offset parameter
-- Method template with parameter intrinsics (`Param[0].Name`, `Param[1].Name`)
-- Demonstrates `Ancestor[n]` hierarchy intrinsics
-
-### ArrayParameter.cs
-Demonstrates query expressions over array parameters:
-- Generates multiple constants from string array
-- Uses `from ... in ... select ...` syntax
-
-### CultureNames.cs
-Shows culture-specific formatting:
-- Generates constants with culture-specific number formatting
-- Uses `CultureName` property to specify formatting culture
-- Demonstrates `AllowMultiple = true` attribute usage
-
-### MultipleTemplates.cs
-Demonstrates applying multiple template attributes to a single target:
-- Shows various attribute reference syntaxes (short name, full name, alias, qualified name)
-- Uses `AllowMultiple = true` to apply the same attribute multiple times
-
-### NestedType.cs
-Tests deeply nested type hierarchies:
-- Nested types across multiple levels (namespace → class → struct → record → record class → record struct)
-- Demonstrates `Ancestor[n]` and `Ancestor[^n]` index notation
