@@ -126,7 +126,7 @@ internal abstract class MemberItem
             Keyword = GetKeyword(t),
             Parameters = GetParameters(t)
         },
-        NamespaceDeclarationSyntax n => new Namespace
+        BaseNamespaceDeclarationSyntax n => new Namespace
         {
             Name = n.Name.ToString()
         },

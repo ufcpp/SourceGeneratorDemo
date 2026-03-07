@@ -75,6 +75,38 @@ public const string Fr = "1 234,5";
 ]);
 
     [Fact]
+    public void FileScopedNamespace() => Run(
+""""
+using AttributeTemplateGenerator;
+
+namespace CultureNames;
+
+[ConstStr("Invariant", 1234.5)]
+[ConstStr("De", 1234.5, CultureName = "de")]
+[ConstStr("Fr", 1234.5, CultureName = "fr")]
+internal partial class Class1;
+
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+internal class ConstStrAttribute(string name, double value) : TemplateAttribute(
+$"""
+public const string {name} = "{value:n1}";
+""");
+
+"""",
+[
+new("ATG_CultureNames.Class1", """
+namespace CultureNames {
+internal partial class Class1 {
+public const string Invariant = "1,234.5";
+public const string De = "1.234,5";
+public const string Fr = "1 234,5";
+}}
+
+"""),
+]);
+
+    [Fact]
     public void Alias() => Run(""""
 using AttributeTemplateGenerator;
 using B;
