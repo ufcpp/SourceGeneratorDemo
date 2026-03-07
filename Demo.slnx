@@ -37,6 +37,7 @@
     <Project Path="Net8.0/Generators/Generators.csproj" />
   </Folder>
   <Folder Name="/Starter/">
+    <File Path="Starter/README.md" />
     <Project Path="Starter/Examples/Examples.csproj" />
     <Project Path="Starter/Generators/Generators.csproj" />
     <Project Path="Starter/UnitTests/UnitTests.csproj" />
