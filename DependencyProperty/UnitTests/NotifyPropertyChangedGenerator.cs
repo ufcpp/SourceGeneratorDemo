@@ -36,75 +36,65 @@ public class NotifyPropertyChangedGeneratorTests
                 #pragma warning disable
 
                 using System.ComponentModel;
-                using System.Runtime.CompilerServices;
 
                 partial class C : INotifyPropertyChanged
                 {
+                    private static readonly PropertyChangedEventArgs IntegerPropertyChangedEventArgs = new PropertyChangedEventArgs(nameof(Integer));
+
                     private int _integer;
 
                     public partial int Integer
                     {
                         get => _integer;
-                        set
-                        {
-                            if (!global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(_integer, value))
-                            {
-                                _integer = value;
-                                OnPropertyChanged();
-                            }
-                        }
+                        set => SetProperty(ref _integer, value, IntegerPropertyChangedEventArgs);
                     }
+
+                    private static readonly PropertyChangedEventArgs StrPropertyChangedEventArgs = new PropertyChangedEventArgs(nameof(Str));
 
                     private string _str;
 
                     public partial string Str
                     {
                         get => _str;
-                        set
-                        {
-                            if (!global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(_str, value))
-                            {
-                                _str = value;
-                                OnPropertyChanged();
-                            }
-                        }
+                        set => SetProperty(ref _str, value, StrPropertyChangedEventArgs);
                     }
+
+                    private static readonly PropertyChangedEventArgs TimePropertyChangedEventArgs = new PropertyChangedEventArgs(nameof(Time));
 
                     private TimeOnly _time;
 
                     public partial TimeOnly Time
                     {
                         get => _time;
-                        set
-                        {
-                            if (!global::System.Collections.Generic.EqualityComparer<TimeOnly>.Default.Equals(_time, value))
-                            {
-                                _time = value;
-                                OnPropertyChanged();
-                            }
-                        }
+                        set => SetProperty(ref _time, value, TimePropertyChangedEventArgs);
                     }
+
+                    private static readonly PropertyChangedEventArgs DatePropertyChangedEventArgs = new PropertyChangedEventArgs(nameof(Date));
 
                     private DateOnly? _date;
 
                     public partial DateOnly? Date
                     {
                         get => _date;
-                        set
-                        {
-                            if (!global::System.Collections.Generic.EqualityComparer<DateOnly?>.Default.Equals(_date, value))
-                            {
-                                _date = value;
-                                OnPropertyChanged();
-                            }
-                        }
+                        set => SetProperty(ref _date, value, DatePropertyChangedEventArgs);
                     }
 
                     public event PropertyChangedEventHandler? PropertyChanged;
 
-                    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+                    protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                        PropertyChanged?.Invoke(this, e);
+                    }
+
+                    protected bool SetProperty<T>(ref T storage, T value, PropertyChangedEventArgs e)
+                    {
+                        if (global::System.Collections.Generic.EqualityComparer<T>.Default.Equals(storage, value))
+                        {
+                            return false;
+                        }
+                        storage = value;
+                        OnPropertyChanged(e);
+                        return true;
                     }
                 }
                 """),

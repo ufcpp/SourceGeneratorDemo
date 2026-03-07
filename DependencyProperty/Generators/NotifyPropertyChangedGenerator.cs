@@ -96,21 +96,17 @@ public class NotifyPropertyChangedGenerator : IIncrementalGenerator
         foreach (var property in properties)
         {
             var backingFieldName = $"_{char.ToLowerInvariant(property.PropertyName[0])}{property.PropertyName[1..]}";
+            var eventArgsFieldName = $"{property.PropertyName}PropertyChangedEventArgs";
 
             sb.Append($$"""
+                private static readonly PropertyChangedEventArgs {{eventArgsFieldName}} = new PropertyChangedEventArgs(nameof({{property.PropertyName}}));
+
                 private {{property.PropertyType}} {{backingFieldName}};
 
                 public partial {{property.PropertyType}} {{property.PropertyName}}
                 {
                     get => {{backingFieldName}};
-                    set
-                    {
-                        if (!global::System.Collections.Generic.EqualityComparer<{{property.PropertyType}}>.Default.Equals({{backingFieldName}}, value))
-                        {
-                            {{backingFieldName}} = value;
-                            OnPropertyChanged();
-                        }
-                    }
+                    set => SetProperty(ref {{backingFieldName}}, value, {{eventArgsFieldName}});
                 }
 
 
@@ -123,15 +119,25 @@ public class NotifyPropertyChangedGenerator : IIncrementalGenerator
             #pragma warning disable
 
             using System.ComponentModel;
-            using System.Runtime.CompilerServices;
 
             {{namespaceDeclaration}}partial class {{className}} : INotifyPropertyChanged
             {
             {{sb}}    public event PropertyChangedEventHandler? PropertyChanged;
 
-                protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+                protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
                 {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                    PropertyChanged?.Invoke(this, e);
+                }
+
+                protected bool SetProperty<T>(ref T storage, T value, PropertyChangedEventArgs e)
+                {
+                    if (global::System.Collections.Generic.EqualityComparer<T>.Default.Equals(storage, value))
+                    {
+                        return false;
+                    }
+                    storage = value;
+                    OnPropertyChanged(e);
+                    return true;
                 }
             }
             """;
