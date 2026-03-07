@@ -8,6 +8,7 @@
     <File Path="Common/PolyFill.cs" />
   </Folder>
   <Folder Name="/VersionInfo/">
+    <File Path="VersionInfo/README.md" />
     <Project Path="VersionInfo/Examples/Examples.csproj" />
     <Project Path="VersionInfo/Generators/Generators.csproj" />
   </Folder>

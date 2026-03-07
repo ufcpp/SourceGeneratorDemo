@@ -63,28 +63,11 @@ The **`Net8Examples` project** references this Source Generator and demonstrates
 You can verify this by running `dotnet run` on the `Net8Examples` folder.
 The .NET 8 Source Generator will execute successfully.
 
-## Verifying Analyzer Runtime Environment
+## Verifying Your Environment
 
-The `Generators` project includes `VersionInfoAnalyzer`, a diagnostic analyzer that helps you verify which runtime environment your analyzers are running on.
+Before adopting .NET 8 Source Generators, you may want to verify which runtime your development environment uses for analyzers.
 
-### How to Use
-
-Add the following directive to any C# file in your project:
-
-```csharp
-#error version
-```
-
-This will trigger a build error that displays:
-- **Compiler version** (Roslyn version)
-- **Runtime** (e.g., ".NET 8.0.1")
-- **Operating System**
-
-### Why This is Useful
-
-This analyzer provides a simple way to confirm that your development environment is indeed running analyzers on .NET 8 (or whatever runtime is configured). The technique is inspired by Roslyn's own version reporting mechanism, enhanced with `RuntimeInformation.FrameworkDescription` to show the runtime details.
-
-Use this to verify your tooling setup before deciding to use .NET 8 Source Generators.
+See [**VersionInfo**](../VersionInfo/README.md) for instructions on using `VersionInfoAnalyzer` to check your analyzer runtime environment.
 
 ## References
 
