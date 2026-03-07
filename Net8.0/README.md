@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project demonstrates Source Generators targeting .NET 8, leveraging modern .NET features and APIs.
+This `Generators` project demonstrates Source Generators targeting .NET 8, leveraging modern .NET features and APIs.
 
 ## Why .NET 8 Instead of .NET Standard 2.0?
 
