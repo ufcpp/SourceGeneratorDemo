@@ -365,10 +365,7 @@ partial record Data
         var hash = new global::System.HashCode();
         hash.Add(EqualityContract);
         hash.Add(Id);
-        foreach (var item in Values)
-        {
-            hash.Add(item);
-        }
+        foreach (var item in Values) hash.Add(item);
         return hash.ToHashCode();
     }
 }
@@ -413,10 +410,7 @@ partial record Data
         var hash = new global::System.HashCode();
         hash.Add(EqualityContract);
         hash.Add(Id);
-        foreach (var item in Values)
-        {
-            hash.Add(item);
-        }
+        foreach (var item in Values) hash.Add(item);
         return hash.ToHashCode();
     }
 }
@@ -464,10 +458,7 @@ partial record Data
         var hash = new global::System.HashCode();
         hash.Add(EqualityContract);
         hash.Add(Id);
-        foreach (var item in Values)
-        {
-            hash.Add(item);
-        }
+        foreach (var item in Values) hash.Add(item);
         return hash.ToHashCode();
     }
 }

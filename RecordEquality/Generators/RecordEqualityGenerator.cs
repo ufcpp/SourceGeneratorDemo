@@ -307,10 +307,7 @@ partial record {{recordNameWithTypeParams}}
             if (property.UseSequenceEqual)
             {
                 sb.Append($$"""
-        foreach (var item in {{property.PropertyName}})
-        {
-            hash.Add(item);
-        }
+        foreach (var item in {{property.PropertyName}}) hash.Add(item);
 
 """);
             }
