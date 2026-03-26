@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Buffers;
 using System.Collections.Immutable;
 using System.Text;
 
@@ -60,52 +61,66 @@ public class RecordEqualityGenerator : IIncrementalGenerator
         if (recordSymbol is null)
             return null;
 
-        var allProperties = recordSymbol.GetMembers()
-            .OfType<IPropertySymbol>()
-            .Where(p => p.Name != "EqualityContract") // Exclude EqualityContract
-            .ToImmutableArray();
+        var members = recordSymbol.GetMembers();
 
-        // Check if any property has [ExplicitKey], [IgnoreKey], or [SequenceKey]
-        var hasExplicitKey = allProperties.Any(p => p.GetAttributes()
-            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"));
+        var count = 0;
 
-        var hasIgnoreKey = allProperties.Any(p => p.GetAttributes()
-            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"));
+        foreach (var member in members)
+        {
+            if (member is IPropertySymbol p && p.Name != "EqualityContract") count++;
+        }
 
-        var hasSequenceKey = allProperties.Any(p => p.GetAttributes()
-            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute"));
+        Span<(int index, int level, bool seq)> attributeInfo = stackalloc (int, int, bool)[count];
+
+        var hasExplicitKey = false;
+        var hasAnyAttribute = false;
+        var propertyCount = 0;
+        var index = 0;
+        foreach (var member in members)
+        {
+            if (member is IPropertySymbol p && p.Name != "EqualityContract")
+            {
+                var @explicit = false;
+                var ignore = false;
+                var sequence = false;
+                foreach (var a in p.GetAttributes())
+                {
+                    var name = a.AttributeClass?.ToDisplayString();
+                    if (name == "RecordEqualityGenerator.ExplicitKeyAttribute") @explicit = true;
+                    else if (name == "RecordEqualityGenerator.IgnoreKeyAttribute") ignore = true;
+                    else if (name == "RecordEqualityGenerator.SequenceKeyAttribute") sequence = true;
+
+                    if ((@explicit || ignore) && sequence) break;
+                }
+
+                var level = @explicit ? 2 :
+                    ignore ? 0 :
+                    1;
+                attributeInfo[propertyCount++] = (index, level, sequence);
+                hasExplicitKey |= @explicit;
+                hasAnyAttribute |= @explicit || ignore || sequence;
+            }
+            index++;
+        }
 
         // If no attribute is used, skip this record
-        if (!hasExplicitKey && !hasIgnoreKey && !hasSequenceKey)
+        if (!hasAnyAttribute)
             return null;
 
         // If both ExplicitKey and IgnoreKey are used, ExplicitKey takes precedence
-        ImmutableArray<PropertyInfo> equalityKeyProperties;
+        var temp = ArrayPool<PropertyInfo>.Shared.Rent(propertyCount);
 
-        if (hasExplicitKey)
+        var keyPropertyCount = 0;
+        foreach (var (i, level, sequence) in attributeInfo[..propertyCount])
         {
-            // Use only properties with [ExplicitKey]
-            equalityKeyProperties = [.. allProperties
-                .Where(p => p.GetAttributes()
-                    .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"))
-                .Select(p => new PropertyInfo(
-                    p.Name, 
-                    GetCSharpTypeName(p.Type),
-                    p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute")))];
-        }
-        else
-        {
-            // Use all properties except those with [IgnoreKey]
-            equalityKeyProperties = [.. allProperties
-                .Where(p => !p.GetAttributes()
-                    .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"))
-                .Select(p => new PropertyInfo(
-                    p.Name, 
-                    GetCSharpTypeName(p.Type),
-                    p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute")))];
+            if (hasExplicitKey ? (level == 2) : (level >= 1))
+            {
+                var p = (IPropertySymbol)members[i];
+                temp[keyPropertyCount++] = new(p.Name, GetCSharpTypeName(p.Type), sequence);
+            }
         }
 
-        if (equalityKeyProperties.IsEmpty)
+        if (keyPropertyCount == 0)
             return null;
 
         var namespaceName = recordSymbol.ContainingNamespace.IsGlobalNamespace
@@ -116,6 +131,9 @@ public class RecordEqualityGenerator : IIncrementalGenerator
         var typeParameters = recordSymbol.TypeParameters
             .Select(tp => tp.Name)
             .ToImmutableArray();
+
+        var equalityKeyProperties = temp.AsSpan(0, keyPropertyCount).ToImmutableArray();
+        ArrayPool<PropertyInfo>.Shared.Return(temp);
 
         return new RecordInfo(
             recordSymbol.Name,
