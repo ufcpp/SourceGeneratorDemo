@@ -13,7 +13,7 @@ public class RecordEqualityGenerator : IIncrementalGenerator
     {
         // Generate the EqualityKey attribute
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "EqualityKeyAttribute.g.cs",
+            "ExplicitKeyAttribute.g.cs",
             """
             using System;
 
@@ -21,12 +21,12 @@ public class RecordEqualityGenerator : IIncrementalGenerator
 
             [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
             [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-            internal class EqualityKeyAttribute : Attribute
+            internal class ExplicitKeyAttribute : Attribute
             {
             }
             """));
 
-        // Find record types with properties marked with [EqualityKey]
+        // Find record types with properties marked with [ExplicitKey]
         var recordDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
             predicate: (node, _) => IsRecordDeclaration(node),
             transform: (context, _) => GetRecordInfo(context))
@@ -48,11 +48,11 @@ public class RecordEqualityGenerator : IIncrementalGenerator
         if (recordSymbol is null)
             return null;
 
-        // Find properties with [EqualityKey] attribute
+        // Find properties with [ExplicitKey] attribute
         var equalityKeyProperties = recordSymbol.GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => p.GetAttributes()
-                .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.EqualityKeyAttribute"))
+                .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"))
             .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))
             .ToImmutableArray();
 

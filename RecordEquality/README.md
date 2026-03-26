@@ -1,12 +1,12 @@
 # Record Equality Generator
 
-This project demonstrates a Source Generator that generates custom equality logic for record types based on `[EqualityKey]` attributes.
+This project demonstrates a Source Generator that generates custom equality logic for record types based on `[ExplicitKey]` attributes.
 
-C# records provide automatic equality comparison based on all properties. However, sometimes you need equality based only on specific "key" properties (like database primary keys or unique identifiers). This generator allows you to mark properties with `[EqualityKey]` and generates equality methods that compare only those properties.
+C# records provide automatic equality comparison based on all properties. However, sometimes you need equality based only on specific "key" properties (like database primary keys or unique identifiers). This generator allows you to mark properties with `[ExplicitKey]` and generates equality methods that compare only those properties.
 
 ## Usage
 
-Mark properties with `[EqualityKey]` attribute in a partial record:
+Mark properties with `[ExplicitKey]` attribute in a partial record:
 
 ```csharp
 using RecordEqualityGenerator;
@@ -16,7 +16,7 @@ namespace RecordEqualityGenerator;
 // Only Name is used for equality comparison
 partial record Person
 {
-    [EqualityKey]
+    [ExplicitKey]
     public required string Name { get; init; }
 
     public int Id { get; init; }
@@ -26,10 +26,10 @@ partial record Person
 // Both Id and SKU are used for equality comparison
 partial record Product
 {
-    [EqualityKey]
+    [ExplicitKey]
     public int Id { get; init; }
 
-    [EqualityKey]
+    [ExplicitKey]
     public required string SKU { get; init; }
 
     public required string Name { get; init; }
@@ -46,20 +46,20 @@ namespace Examples;
 
 // Non-generic record
 partial record Pair(
-    [property: EqualityKey] int X,
-    [property: EqualityKey] string Y,
+    [property: ExplicitKey] int X,
+    [property: ExplicitKey] string Y,
     string Other);
 
 // Generic record with one type parameter
 partial record Pair<T>(
-    [property: EqualityKey] T X,
-    [property: EqualityKey] string Y,
+    [property: ExplicitKey] T X,
+    [property: ExplicitKey] string Y,
     string Other);
 
 // Generic record with multiple type parameters
 partial record Pair<T1, T2>(
-    [property: EqualityKey] T1 X,
-    [property: EqualityKey] T2 Y,
+    [property: ExplicitKey] T1 X,
+    [property: ExplicitKey] T2 Y,
     string Other);
 ```
 

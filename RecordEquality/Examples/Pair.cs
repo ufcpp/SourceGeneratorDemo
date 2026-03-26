@@ -3,16 +3,16 @@ using RecordEqualityGenerator;
 namespace Examples;
 
 partial record Pair(
-    [property: EqualityKey] int X,
-    [property: EqualityKey] string Y,
+    [property: ExplicitKey] int X,
+    [property: ExplicitKey] string Y,
     string Other);
 
 partial record Pair<T>(
-    [property: EqualityKey] T X,
-    [property: EqualityKey] string Y,
+    [property: ExplicitKey] T X,
+    [property: ExplicitKey] string Y,
     string Other);
 
 partial record Pair<T1, T2>(
-    [property: EqualityKey] T1 X,
-    [property: EqualityKey] T2 Y,
+    [property: ExplicitKey] T1 X,
+    [property: ExplicitKey] T2 Y,
     string Other);

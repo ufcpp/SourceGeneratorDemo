@@ -22,7 +22,7 @@ namespace RecordEqualityGenerator;
 
 partial record Person
 {
-    [EqualityKey]
+    [ExplicitKey]
     public required string Name { get; init; }
 
     public int Id { get; init; }
@@ -66,10 +66,10 @@ namespace RecordEqualityGenerator;
 
 partial record Product
 {
-    [EqualityKey]
+    [ExplicitKey]
     public int Id { get; init; }
 
-    [EqualityKey]
+    [ExplicitKey]
     public required string SKU { get; init; }
 
     public required string Name { get; init; }
@@ -116,8 +116,8 @@ using RecordEqualityGenerator;
 namespace Examples;
 
 partial record Pair<T>(
-    [property: EqualityKey] T X,
-    [property: EqualityKey] string Y,
+    [property: ExplicitKey] T X,
+    [property: ExplicitKey] string Y,
     string Other);
 """,
 [
@@ -160,8 +160,8 @@ using RecordEqualityGenerator;
 namespace Examples;
 
 partial record Pair<T1, T2>(
-    [property: EqualityKey] T1 X,
-    [property: EqualityKey] T2 Y,
+    [property: ExplicitKey] T1 X,
+    [property: ExplicitKey] T2 Y,
     string Other);
 """,
 [
@@ -203,7 +203,7 @@ using RecordEqualityGenerator;
 
 partial record Item
 {
-    [EqualityKey]
+    [ExplicitKey]
     public int Value { get; init; }
 }
 """,

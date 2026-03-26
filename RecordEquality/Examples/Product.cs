@@ -3,10 +3,10 @@ namespace RecordEqualityGenerator;
 // Both Id and SKU are used for equality
 partial record Product
 {
-    [EqualityKey]
+    [ExplicitKey]
     public int Id { get; init; }
 
-    [EqualityKey]
+    [ExplicitKey]
     public required string SKU { get; init; }
 
     public required string Name { get; init; }

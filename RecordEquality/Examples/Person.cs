@@ -3,7 +3,7 @@ namespace RecordEqualityGenerator;
 // Only Name is used for equality
 partial record Person
 {
-    [EqualityKey]
+    [ExplicitKey]
     public required string Name { get; init; }
 
     public int Id { get; init; }
