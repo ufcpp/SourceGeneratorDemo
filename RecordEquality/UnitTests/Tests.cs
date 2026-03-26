@@ -327,4 +327,153 @@ partial record Product
 null,
 Header);
     }
+
+    [Fact]
+    public void SequenceKey()
+    {
+        Helpers.RunGenerator(
+            new RecordEqualityGenerator(),
+"""
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    [ExplicitKey]
+    public int Id { get; init; }
+
+    [ExplicitKey]
+    [SequenceKey]
+    public int[] Values { get; init; }
+}
+""",
+[
+    new("RecordEqualityGenerator.Data.Equality", """
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    public virtual bool Equals(Data? other)
+    {
+        return ReferenceEquals(this, other) || other is not null && EqualityContract == other.EqualityContract
+            && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(Id, other.Id)
+            && global::System.Linq.Enumerable.SequenceEqual(Values, other.Values)
+        ;
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new global::System.HashCode();
+        hash.Add(EqualityContract);
+        hash.Add(Id);
+        foreach (var item in Values)
+        {
+            hash.Add(item);
+        }
+        return hash.ToHashCode();
+    }
+}
+""")
+],
+null,
+Header);
+    }
+
+    [Fact]
+    public void SequenceKey_Only()
+    {
+        Helpers.RunGenerator(
+            new RecordEqualityGenerator(),
+"""
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    public int Id { get; init; }
+
+    [SequenceKey]
+    public int[] Values { get; init; }
+}
+""",
+[
+    new("RecordEqualityGenerator.Data.Equality", """
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    public virtual bool Equals(Data? other)
+    {
+        return ReferenceEquals(this, other) || other is not null && EqualityContract == other.EqualityContract
+            && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(Id, other.Id)
+            && global::System.Linq.Enumerable.SequenceEqual(Values, other.Values)
+        ;
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new global::System.HashCode();
+        hash.Add(EqualityContract);
+        hash.Add(Id);
+        foreach (var item in Values)
+        {
+            hash.Add(item);
+        }
+        return hash.ToHashCode();
+    }
+}
+""")
+],
+null,
+Header);
+    }
+
+    [Fact]
+    public void SequenceKey_WithIgnoreKey()
+    {
+        Helpers.RunGenerator(
+            new RecordEqualityGenerator(),
+"""
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    public int Id { get; init; }
+
+    [SequenceKey]
+    public int[] Values { get; init; }
+
+    [IgnoreKey]
+    public string Name { get; init; }
+}
+""",
+[
+    new("RecordEqualityGenerator.Data.Equality", """
+namespace RecordEqualityGenerator;
+
+partial record Data
+{
+    public virtual bool Equals(Data? other)
+    {
+        return ReferenceEquals(this, other) || other is not null && EqualityContract == other.EqualityContract
+            && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(Id, other.Id)
+            && global::System.Linq.Enumerable.SequenceEqual(Values, other.Values)
+        ;
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new global::System.HashCode();
+        hash.Add(EqualityContract);
+        hash.Add(Id);
+        foreach (var item in Values)
+        {
+            hash.Add(item);
+        }
+        return hash.ToHashCode();
+    }
+}
+""")
+],
+null,
+Header);
+    }
 }

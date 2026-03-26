@@ -41,7 +41,22 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             }
             """));
 
-        // Find record types with properties marked with [ExplicitKey] or [IgnoreKey]
+        // Generate the SequenceKey attribute
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
+            "SequenceKeyAttribute.g.cs",
+            """
+            using System;
+
+            namespace RecordEqualityGenerator;
+
+            [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
+            [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+            internal class SequenceKeyAttribute : Attribute
+            {
+            }
+            """));
+
+        // Find record types with properties marked with [ExplicitKey], [IgnoreKey], or [SequenceKey]
         var recordDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
             predicate: (node, _) => IsRecordDeclaration(node),
             transform: (context, _) => GetRecordInfo(context))
@@ -68,18 +83,21 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             .Where(p => p.Name != "EqualityContract") // Exclude EqualityContract
             .ToImmutableArray();
 
-        // Check if any property has [ExplicitKey] or [IgnoreKey]
+        // Check if any property has [ExplicitKey], [IgnoreKey], or [SequenceKey]
         var hasExplicitKey = allProperties.Any(p => p.GetAttributes()
             .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"));
 
         var hasIgnoreKey = allProperties.Any(p => p.GetAttributes()
             .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"));
 
-        // If neither attribute is used, skip this record
-        if (!hasExplicitKey && !hasIgnoreKey)
+        var hasSequenceKey = allProperties.Any(p => p.GetAttributes()
+            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute"));
+
+        // If no attribute is used, skip this record
+        if (!hasExplicitKey && !hasIgnoreKey && !hasSequenceKey)
             return null;
 
-        // If both attributes are used, ExplicitKey takes precedence
+        // If both ExplicitKey and IgnoreKey are used, ExplicitKey takes precedence
         ImmutableArray<PropertyInfo> equalityKeyProperties;
 
         if (hasExplicitKey)
@@ -88,7 +106,10 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             equalityKeyProperties = [.. allProperties
                 .Where(p => p.GetAttributes()
                     .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"))
-                .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))];
+                .Select(p => new PropertyInfo(
+                    p.Name, 
+                    GetCSharpTypeName(p.Type),
+                    p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute")))];
         }
         else
         {
@@ -96,7 +117,10 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             equalityKeyProperties = [.. allProperties
                 .Where(p => !p.GetAttributes()
                     .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"))
-                .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))];
+                .Select(p => new PropertyInfo(
+                    p.Name, 
+                    GetCSharpTypeName(p.Type),
+                    p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.SequenceKeyAttribute")))];
         }
 
         if (equalityKeyProperties.IsEmpty)
@@ -183,10 +207,20 @@ partial class {{recordNameWithTypeParams}}
 
             foreach (var property in properties)
             {
-                sb.Append($$"""
+                if (property.UseSequenceEqual)
+                {
+                    sb.Append($$"""
+        if (!global::System.Linq.Enumerable.SequenceEqual({{property.PropertyName}}, other.{{property.PropertyName}})) return false;
+
+""");
+                }
+                else
+                {
+                    sb.Append($$"""
         if (!global::System.Collections.Generic.EqualityComparer<{{property.PropertyType}}>.Default.Equals({{property.PropertyName}}, other.{{property.PropertyName}})) return false;
 
 """);
+                }
             }
 
             sb.Append("""
@@ -201,10 +235,23 @@ partial class {{recordNameWithTypeParams}}
 
             foreach (var property in properties)
             {
-                sb.Append($$"""
+                if (property.UseSequenceEqual)
+                {
+                    sb.Append($$"""
+        foreach (var item in {{property.PropertyName}})
+        {
+            hash.Add(item);
+        }
+
+""");
+                }
+                else
+                {
+                    sb.Append($$"""
         hash.Add({{property.PropertyName}});
 
 """);
+                }
             }
 
             sb.Append("""
@@ -228,10 +275,20 @@ partial record {{recordNameWithTypeParams}}
 
         foreach (var property in properties)
         {
-            sb.Append($$"""
+            if (property.UseSequenceEqual)
+            {
+                sb.Append($$"""
+            && global::System.Linq.Enumerable.SequenceEqual({{property.PropertyName}}, other.{{property.PropertyName}})
+
+""");
+            }
+            else
+            {
+                sb.Append($$"""
             && global::System.Collections.Generic.EqualityComparer<{{property.PropertyType}}>.Default.Equals({{property.PropertyName}}, other.{{property.PropertyName}})
 
 """);
+            }
         }
 
         sb.Append("""
@@ -247,10 +304,23 @@ partial record {{recordNameWithTypeParams}}
 
         foreach (var property in properties)
         {
-            sb.Append($$"""
+            if (property.UseSequenceEqual)
+            {
+                sb.Append($$"""
+        foreach (var item in {{property.PropertyName}})
+        {
+            hash.Add(item);
+        }
+
+""");
+            }
+            else
+            {
+                sb.Append($$"""
         hash.Add({{property.PropertyName}});
 
 """);
+            }
         }
 
         sb.Append("""
@@ -262,7 +332,7 @@ partial record {{recordNameWithTypeParams}}
         return sb.ToString();
     }
 
-    private record PropertyInfo(string PropertyName, string PropertyType);
+    private record PropertyInfo(string PropertyName, string PropertyType, bool UseSequenceEqual);
 
     private record RecordInfo(
         string RecordName,
