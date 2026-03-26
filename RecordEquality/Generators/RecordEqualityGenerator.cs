@@ -11,9 +11,9 @@ public class RecordEqualityGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Generate the ExplicitKey attribute
+        // Generate the attributes
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "ExplicitKeyAttribute.g.cs",
+            "RecordEqualityAttributes.g.cs",
             """
             using System;
 
@@ -24,30 +24,12 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             internal class ExplicitKeyAttribute : Attribute
             {
             }
-            """));
-
-        // Generate the IgnoreKey attribute
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "IgnoreKeyAttribute.g.cs",
-            """
-            using System;
-
-            namespace RecordEqualityGenerator;
 
             [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
             [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
             internal class IgnoreKeyAttribute : Attribute
             {
             }
-            """));
-
-        // Generate the SequenceKey attribute
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "SequenceKeyAttribute.g.cs",
-            """
-            using System;
-
-            namespace RecordEqualityGenerator;
 
             [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
             [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
