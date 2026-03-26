@@ -41,6 +41,12 @@
     <Project Path="Net8.0/Examples/Examples.csproj" />
     <Project Path="Net8.0/Generators/Generators.csproj" />
   </Folder>
+  <Folder Name="/RecordEquality/">
+    <File Path="RecordEquality/README.md" />
+    <Project Path="RecordEquality/Examples/Examples.csproj" />
+    <Project Path="RecordEquality/Generators/Generators.csproj" />
+    <Project Path="RecordEquality/UnitTests/UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Starter/">
     <File Path="Starter/README.md" />
     <Project Path="Starter/Examples/Examples.csproj" />
