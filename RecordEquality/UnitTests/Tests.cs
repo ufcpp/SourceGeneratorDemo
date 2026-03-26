@@ -231,4 +231,100 @@ partial record Item
 null,
 Header);
     }
+
+    [Fact]
+    public void IgnoreKey_SingleProperty()
+    {
+        Helpers.RunGenerator(
+            new RecordEqualityGenerator(),
+"""
+namespace RecordEqualityGenerator;
+
+partial record Person
+{
+    public required string Name { get; init; }
+
+    [IgnoreKey]
+    public int Id { get; init; }
+
+    [IgnoreKey]
+    public int Age { get; init; }
+}
+""",
+[
+    new("RecordEqualityGenerator.Person.Equality", """
+namespace RecordEqualityGenerator;
+
+partial record Person
+{
+    public virtual bool Equals(Person? other)
+    {
+        return ReferenceEquals(this, other) || other is not null && EqualityContract == other.EqualityContract
+            && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(Name, other.Name)
+        ;
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new global::System.HashCode();
+        hash.Add(EqualityContract);
+        hash.Add(Name);
+        return hash.ToHashCode();
+    }
+}
+""")
+],
+null,
+Header);
+    }
+
+    [Fact]
+    public void IgnoreKey_MultipleProperties()
+    {
+        Helpers.RunGenerator(
+            new RecordEqualityGenerator(),
+"""
+namespace RecordEqualityGenerator;
+
+partial record Product
+{
+    public int Id { get; init; }
+
+    public required string SKU { get; init; }
+
+    [IgnoreKey]
+    public required string Name { get; init; }
+
+    [IgnoreKey]
+    public decimal Price { get; init; }
+}
+""",
+[
+    new("RecordEqualityGenerator.Product.Equality", """
+namespace RecordEqualityGenerator;
+
+partial record Product
+{
+    public virtual bool Equals(Product? other)
+    {
+        return ReferenceEquals(this, other) || other is not null && EqualityContract == other.EqualityContract
+            && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(Id, other.Id)
+            && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(SKU, other.SKU)
+        ;
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new global::System.HashCode();
+        hash.Add(EqualityContract);
+        hash.Add(Id);
+        hash.Add(SKU);
+        return hash.ToHashCode();
+    }
+}
+""")
+],
+null,
+Header);
+    }
 }

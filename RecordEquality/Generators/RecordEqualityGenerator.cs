@@ -11,7 +11,7 @@ public class RecordEqualityGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Generate the EqualityKey attribute
+        // Generate the ExplicitKey attribute
         context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             "ExplicitKeyAttribute.g.cs",
             """
@@ -26,7 +26,22 @@ public class RecordEqualityGenerator : IIncrementalGenerator
             }
             """));
 
-        // Find record types with properties marked with [ExplicitKey]
+        // Generate the IgnoreKey attribute
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
+            "IgnoreKeyAttribute.g.cs",
+            """
+            using System;
+
+            namespace RecordEqualityGenerator;
+
+            [System.Diagnostics.Conditional("COMPILE_TIME_ONLY")]
+            [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+            internal class IgnoreKeyAttribute : Attribute
+            {
+            }
+            """));
+
+        // Find record types with properties marked with [ExplicitKey] or [IgnoreKey]
         var recordDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
             predicate: (node, _) => IsRecordDeclaration(node),
             transform: (context, _) => GetRecordInfo(context))
@@ -48,13 +63,41 @@ public class RecordEqualityGenerator : IIncrementalGenerator
         if (recordSymbol is null)
             return null;
 
-        // Find properties with [ExplicitKey] attribute
-        var equalityKeyProperties = recordSymbol.GetMembers()
+        var allProperties = recordSymbol.GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(p => p.GetAttributes()
-                .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"))
-            .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))
+            .Where(p => p.Name != "EqualityContract") // Exclude EqualityContract
             .ToImmutableArray();
+
+        // Check if any property has [ExplicitKey] or [IgnoreKey]
+        var hasExplicitKey = allProperties.Any(p => p.GetAttributes()
+            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"));
+
+        var hasIgnoreKey = allProperties.Any(p => p.GetAttributes()
+            .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"));
+
+        // If neither attribute is used, skip this record
+        if (!hasExplicitKey && !hasIgnoreKey)
+            return null;
+
+        // If both attributes are used, ExplicitKey takes precedence
+        ImmutableArray<PropertyInfo> equalityKeyProperties;
+
+        if (hasExplicitKey)
+        {
+            // Use only properties with [ExplicitKey]
+            equalityKeyProperties = [.. allProperties
+                .Where(p => p.GetAttributes()
+                    .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.ExplicitKeyAttribute"))
+                .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))];
+        }
+        else
+        {
+            // Use all properties except those with [IgnoreKey]
+            equalityKeyProperties = [.. allProperties
+                .Where(p => !p.GetAttributes()
+                    .Any(a => a.AttributeClass?.ToDisplayString() == "RecordEqualityGenerator.IgnoreKeyAttribute"))
+                .Select(p => new PropertyInfo(p.Name, GetCSharpTypeName(p.Type)))];
+        }
 
         if (equalityKeyProperties.IsEmpty)
             return null;
@@ -99,7 +142,7 @@ public class RecordEqualityGenerator : IIncrementalGenerator
 
     private static string GenerateSource(RecordInfo recordInfo)
     {
-        var (recordName, namespaceName, isRecord, arity, typeParameters, properties) = recordInfo;
+        var (recordName, namespaceName, isRecord, _, typeParameters, properties) = recordInfo;
 
         // Build type parameter list for generic types
         var typeParameterList = typeParameters.IsEmpty
